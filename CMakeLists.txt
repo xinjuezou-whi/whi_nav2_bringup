@@ -28,6 +28,10 @@ install(
 
 install(PROGRAMS
   scripts/docking_node.py
+  scripts/obstacle_detector.py
+  scripts/mock_elevator_node.py
+  scripts/rtabmap_db_switcher_node.py
+  scripts/multi_floor_dispatcher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -96,6 +96,10 @@ def launch_setup(context, *args, **kwargs):
         nav2_params_file_name = f"nav2_params_mppi_{vehicle}.yaml"
     elif local_planner.lower() in ("rpp", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_rpp_{vehicle}.yaml"
+    elif local_planner.lower() in ("vp", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_vp_{vehicle}.yaml"
+    elif local_planner.lower() in ("graceful", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_graceful_{vehicle}.yaml"
     else:
         nav2_params_file_name = f"nav2_params_dwb"
 
@@ -187,6 +191,38 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
+
+    # RealSense Camera Inclusion
+    realsense_launch_file = PathJoinSubstitution([
+        FindPackageShare('realsense2_camera'),
+        'launch',
+        'rs_launch.py'
+    ])
+    
+    start_realsense_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(realsense_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+            'depth_module.profile': '640x480x30',
+            'enable_sync': 'true',
+            'global_time_enabled': 'true',
+            'filters': 'decimation,spatial,temporal',
+            'decimation_filter.enable': 'true',
+            'spatial_filter.enable': 'true',
+            'align_depth.enable': 'true',
+            'temporal_filter.enable': 'true'
+        }.items(),
+    )
+
+    # Obstacle Detector Inclusion
+    start_obstacle_detector_cmd = Node(
+        package='whi_nav2_bringup',
+        executable='obstacle_detector.py',
+        name='obstacle_detector',
+        namespace=namespace,
+        output='screen'
+    )
+
     # range sensors
     range_sensor_params_file=os.path.join(get_package_share_directory('whi_range_sensors'),
         'config', 'config.yaml')
@@ -261,6 +297,8 @@ def launch_setup(context, *args, **kwargs):
         start_lakibeam1_cmd,
         start_rslidar_cmd,
         start_range_sensors_cmd,
+        # start_realsense_cmd,                  # Added here
+        start_obstacle_detector_cmd,
         start_localization_cmd,
         start_nav2_facilities_cmd,
         start_rviz_cmd

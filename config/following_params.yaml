@@ -9,7 +9,7 @@ whi_nav2_following_server:
     max_retries: 3
     base_frame: base_link
     fixed_frame: odom
-    desired_distance: 0.6
+    desired_distance: 0.53
     skip_orientation: true
     search_by_rotating: false
     odom_topic: odom

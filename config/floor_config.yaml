@@ -1,0 +1,83 @@
+# floors:
+#   Floor_1:
+#     db_path: "/home/nvidia/Desktop/jitri_Wuxi_F1.db"
+#     elevator_entry_pose:
+#       x: 0.0
+#       y: 0.0
+#       yaw: 168.0  
+#       frame_id: "map"
+#     landing_pose:
+#       x: 0.0
+#       y: 0.0
+#       yaw: 0.0
+#       frame_id: "map"
+#     blind_entry:
+#       distance: 4.6
+#       speed: 0.15
+#     blind_exit:
+#       distance: 2.5
+#       speed: 0.15
+
+#   Floor_2:
+#     db_path: "/home/nvidia/Desktop/jitri_Wuxi_F2.db"
+#     elevator_entry_pose:
+#       x: 0.0
+#       y: 0.0
+#       yaw: 168.0
+#       frame_id: "map"
+#     landing_pose:
+#       x: 0.0
+#       y: 0.0
+#       yaw: 0.0
+#       frame_id: "map"
+#     blind_entry:
+#       distance: 4.6
+#       speed: 0.15
+#     blind_exit:
+#       distance: 2.5
+#       speed: 0.15
+
+
+
+########################################################################## DEMO ///  MOCK
+
+
+floors:
+  Floor_1:
+    db_path: "/home/nvidia/Desktop/jitri_wuxi_optimized.db"
+    elevator_entry_pose:
+      x: -10.49
+      y: -0.76
+      yaw: 0.00  
+      frame_id: "map"
+    landing_pose:
+      x: -5.82
+      y: -1.51
+      yaw: -159.68 
+      frame_id: "map"
+    blind_entry:
+      distance: 1.0
+      speed: 0.15
+    blind_exit:
+      distance: 1.0
+      speed: 0.15
+
+  Floor_2:
+    db_path: "/home/nvidia/Desktop/jitri_wuxi.db"
+    elevator_entry_pose:
+      x: -4.24
+      y: -0.91
+      yaw: 180.0
+      frame_id: "map"
+    landing_pose:
+      x: -10.45
+      y: -1.02
+      yaw: -23.8
+      frame_id: "map"
+    blind_entry:
+      distance: 1.0
+      speed: 0.15
+    blind_exit:
+      distance: 1.0
+      speed: 0.15
+

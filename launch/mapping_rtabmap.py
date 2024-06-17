@@ -180,15 +180,15 @@ def launch_setup(context, *args, **kwargs):
         'Grid/MapFrameProjection': 'false',       # from Mathieu
         'Grid/NormalsSegmentation': 'false',      # ************************ trying
         'Grid/MaxObstacleHeight': '5.0',
-        'Grid/MinGroundHeight': '0.0',            #'-0.5',
-        'Grid/MaxGroundHeight': '0.05',           #'-0.01',
-        'Grid/3D': 'false',
+        'Grid/MinGroundHeight': '0.0',            #'-0.5', 
+        'Grid/MaxGroundHeight': '0.05',           #'-0.01',  
+        'Grid/3D': 'false',               
         'Grid/RayTracing': 'true',
         # 'GridGlobal/UpdateError': '0.1',          # from Mathieu
         'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db
         'Mem/STMSize': '100',                     # from Mathieu
         'Mem/ReduceGraph': 'true',                # to suppress the size of db
-        'Mem/BinDataKept': 'false',                # to suppress the size of db
+        'Mem/BinDataKept': 'false',                # to suppress the size of db  
         # 'Mem/DepthAsMask': 'false',               # from Mathieu
         # 'Mem/StereoFromMotion': 'true',           # from Mathieu
         'Mem/UseOdomGravity': 'true',             # ************************ trying
@@ -196,7 +196,7 @@ def launch_setup(context, *args, **kwargs):
         'Reg/Force3DoF': 'false',                 # ************************ trying
         'Icp/Strategy': '1',                      # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
         'Icp/MaxTranslation': '5.0',              # ************************ trying
-        'Icp/VoxelSize': '0.15',                  # *********************** trying
+        'Icp/VoxelSize': '0.15',                  # ********** trying 
         'Icp/DownsamplingStep': '1',              # *********************** trying
         'Icp/MaxCorrespondenceDistance': '0.25',  # *********************** trying
         'Icp/Iterations': '50',                   # *********************** trying
