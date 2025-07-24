@@ -26,6 +26,7 @@ def generate_launch_description():
     # Input parameters declaration
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    autostart = LaunchConfiguration('autostart')
     vehicle = LaunchConfiguration("vehicle")
     vehicle_model = LaunchConfiguration("vehicle_model")
 
@@ -57,6 +58,10 @@ def generate_launch_description():
         'use_sim_time',
         default_value='false',
         description='Use simulation (Gazebo) clock if true')
+
+    declare_autostart_cmd = DeclareLaunchArgument(
+        'autostart', default_value='true',
+        description='Automatically startup the nav2 stack')
 
     # Nodes launching commands
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
@@ -95,6 +100,22 @@ def generate_launch_description():
         parameters=[slam_toolbox_params]
     )
 
+    start_map_saver_server_cmd = Node(
+            package='nav2_map_server',
+            executable='map_saver_server',
+            output='screen',
+            parameters=[slam_toolbox_params])
+
+    lifecycle_nodes = ['map_saver']
+    start_lifecycle_manager_cmd = Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_slam',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time},
+                        {'autostart': autostart},
+                        {'node_names': lifecycle_nodes}])
+
     # rviz visualization
     start_rviz_cmd = Node(
         package="rviz2",
@@ -108,6 +129,7 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_autostart_cmd)
 
     # Running whi_motion_hw_if
     ld.add_action(start_whi_motion_hw_if_cmd)
@@ -116,6 +138,10 @@ def generate_launch_description():
 
     # Running SLAM Toolbox
     ld.add_action(start_slam_toolbox_cmd)
+
+    # Running Map Saver Server
+    ld.add_action(start_map_saver_server_cmd)
+    ld.add_action(start_lifecycle_manager_cmd)
 
     # rviz
     ld.add_action(start_rviz_cmd)
