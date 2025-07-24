@@ -26,6 +26,7 @@ def generate_launch_description():
     # Input parameters declaration
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    use_stamped_vel = LaunchConfiguration('use_stamped_vel')
     autostart = LaunchConfiguration('autostart')
     vehicle = LaunchConfiguration("vehicle")
     vehicle_model = LaunchConfiguration("vehicle_model")
@@ -56,6 +57,10 @@ def generate_launch_description():
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time', default_value='false',
         description='Use simulation (Gazebo) clock if true')
+
+    declare_use_stamped_vel = DeclareLaunchArgument(
+        'use_stamped_vel', default_value='true',
+        description='Use stamped twist')
 
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='true',
@@ -135,6 +140,7 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_use_stamped_vel)
     ld.add_action(declare_autostart_cmd)
 
     # Running whi_motion_hw_if

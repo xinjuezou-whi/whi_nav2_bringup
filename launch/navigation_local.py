@@ -24,6 +24,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_stamped_vel = LaunchConfiguration('use_stamped_vel')
     vehicle = LaunchConfiguration("vehicle")
     vehicle_model = LaunchConfiguration("vehicle_model")
     map = LaunchConfiguration("map")
@@ -71,6 +72,7 @@ def generate_launch_description():
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={
+            'use_stamped_vel': use_stamped_vel,
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
         }.items()
@@ -98,6 +100,9 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'use_sim_time', default_value='false',
             description='Use simulation (Gazebo) clock if true'),
+        DeclareLaunchArgument(
+            'use_stamped_vel', default_value='false', # false for foxy
+            description='Use stamped twist'),
         DeclareLaunchArgument(
             'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
             description='Full path to map file to load'),
