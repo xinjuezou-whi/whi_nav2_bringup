@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(whi_navi2_bringup)
+project(whi_nav2_bringup)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)

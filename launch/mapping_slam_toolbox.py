@@ -42,7 +42,7 @@ def generate_launch_description():
         'lakibeam1_scan.launch.py'
     ])
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("whi_navi2_bringup"), "launch", "config_mapping.rviz"]
+        [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping.rviz"]
     )
     slam_toolbox_config_file = PathJoinSubstitution(
         [FindPackageShare("slam_toolbox"), "config", "mapper_params_online_async.yaml"]
@@ -50,22 +50,28 @@ def generate_launch_description():
 
     # Declare the launch arguments
     declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
+        'namespace', default_value='',
         description='Top-level namespace')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='false',
+        'use_sim_time', default_value='false',
         description='Use simulation (Gazebo) clock if true')
 
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='true',
         description='Automatically startup the nav2 stack')
 
+    declare_vehicle_cmd = DeclareLaunchArgument(
+        "vehicle", default_value="L1",
+        description="the mobile robot series")
+
+    declare_vehicle_model_cmd = DeclareLaunchArgument(
+        "vehicle_model", default_value="diff",
+        description="the mobile robot's dynamic model")
+
     # Nodes launching commands
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(lidar_lakibeam1_launch_file),
+        PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
@@ -74,7 +80,7 @@ def generate_launch_description():
 
     # LiDAR
     start_lakibeam1_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
+        PythonLaunchDescriptionSource(lidar_lakibeam1_launch_file),
         launch_arguments={
             'frame_id': 'laser',
             'output_topic0': 'scan',
