@@ -27,6 +27,7 @@ def generate_launch_description():
     use_stamped_vel = LaunchConfiguration('use_stamped_vel')
     vehicle = LaunchConfiguration("vehicle")
     vehicle_model = LaunchConfiguration("vehicle_model")
+    use_ekf = LaunchConfiguration("use_ekf", default='true')
     map = LaunchConfiguration("map")
     
     nav2_params_file = PathJoinSubstitution(
@@ -75,6 +76,7 @@ def generate_launch_description():
             'use_stamped_vel': use_stamped_vel,
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
+            'use_ekf': use_ekf
         }.items()
     )
 
@@ -104,17 +106,17 @@ def generate_launch_description():
             'use_stamped_vel', default_value='false', # false for foxy
             description='Use stamped twist'),
         DeclareLaunchArgument(
-            'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
-            description='Full path to map file to load'),
-        DeclareLaunchArgument(
-            'nav2_params', default_value=nav2_params_file,
-            description='Full path to param file to load'),
-        DeclareLaunchArgument(
             "vehicle", default_value="L1",
             description="the mobile robot series"),
         DeclareLaunchArgument(
             "vehicle_model", default_value="diff",
             description="the mobile robot's dynamic model"),
+        DeclareLaunchArgument(
+            'use_ekf', default_value='true',
+            description='Use ekf to fuse localization'),
+        DeclareLaunchArgument(
+            'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
+            description='Full path to map file to load'),
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
         start_nav2_bringup_cmd,
