@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 
-def generate_launch_description():
+def launch_setup(context, *args, **kwargs):
     # Input parameters declaration
+    # evaluate substitutions at runtime
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
-    use_stamped_vel = LaunchConfiguration('use_stamped_vel')
     autostart = LaunchConfiguration('autostart')
-    vehicle = LaunchConfiguration("vehicle")
-    vehicle_model = LaunchConfiguration("vehicle_model")
+    vehicle = LaunchConfiguration("vehicle").perform(context)
+    vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
+    use_ekf = LaunchConfiguration("use_ekf").perform(context)
 
     # Getting directories and launch-files
     whi_motion_hw_if_launch_file = PathJoinSubstitution([
@@ -49,37 +48,13 @@ def generate_launch_description():
         [FindPackageShare("slam_toolbox"), "config", "mapper_params_online_async.yaml"]
     )
 
-    # Declare the launch arguments
-    declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace', default_value='',
-        description='Top-level namespace')
-
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time', default_value='false',
-        description='Use simulation (Gazebo) clock if true')
-
-    declare_use_stamped_vel = DeclareLaunchArgument(
-        'use_stamped_vel', default_value='true',
-        description='Use stamped twist')
-
-    declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', default_value='true',
-        description='Automatically startup the nav2 stack')
-
-    declare_vehicle_cmd = DeclareLaunchArgument(
-        "vehicle", default_value="L1",
-        description="the mobile robot series")
-
-    declare_vehicle_model_cmd = DeclareLaunchArgument(
-        "vehicle_model", default_value="diff",
-        description="the mobile robot's dynamic model")
-
     # Nodes launching commands
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
+            'use_ekf': use_ekf
         }.items()
     )
 
@@ -135,27 +110,31 @@ def generate_launch_description():
         arguments=["-d", rviz_config_file],
     )
 
-    ld = LaunchDescription()
+    launch_nodes = [
+        start_whi_motion_hw_if_cmd,
+        start_lakibeam1_cmd,
+        start_slam_toolbox_cmd,
+        start_map_saver_server_cmd,
+        start_lifecycle_manager_cmd,
+        start_rviz_cmd
+    ]
 
-    # Declare the launch options
-    ld.add_action(declare_namespace_cmd)
-    ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_use_stamped_vel)
-    ld.add_action(declare_autostart_cmd)
+    return launch_nodes
 
-    # Running whi_motion_hw_if
-    ld.add_action(start_whi_motion_hw_if_cmd)
-    # Running LiDAR
-    ld.add_action(start_lakibeam1_cmd)
-
-    # Running SLAM Toolbox
-    ld.add_action(start_slam_toolbox_cmd)
-
-    # Running Map Saver Server
-    ld.add_action(start_map_saver_server_cmd)
-    ld.add_action(start_lifecycle_manager_cmd)
-
-    # rviz
-    ld.add_action(start_rviz_cmd)
-
-    return ld
+def generate_launch_description():
+    return LaunchDescription([
+        # Declare the launch arguments
+        DeclareLaunchArgument('namespace', default_value='',
+            description='Top-level namespace'),
+        DeclareLaunchArgument('use_sim_time', default_value='false',
+            description='Use simulation (Gazebo) clock if true'),
+        DeclareLaunchArgument('autostart', default_value='true',
+            description='Automatically startup the nav2 stack'),
+        DeclareLaunchArgument("vehicle", default_value="L1",
+            description="the mobile robot series"),
+        DeclareLaunchArgument("vehicle_model", default_value="diff",
+            description="the mobile robot's dynamic model"),
+        DeclareLaunchArgument('use_ekf', default_value='true',
+            description='Use ekf to fuse localization'),
+        OpaqueFunction(function=launch_setup)
+    ])

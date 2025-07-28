@@ -12,26 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
+from launch.conditions import IfCondition
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
-
-def generate_launch_description():
+def launch_setup(context, *args, **kwargs):
+    # Input parameters declaration
+    # evaluate substitutions at runtime
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     use_stamped_vel = LaunchConfiguration('use_stamped_vel')
-    vehicle = LaunchConfiguration("vehicle")
-    vehicle_model = LaunchConfiguration("vehicle_model")
-    use_ekf = LaunchConfiguration("use_ekf", default='true')
+    vehicle = LaunchConfiguration("vehicle").perform(context)
+    vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
+    use_ekf = LaunchConfiguration("use_ekf").perform(context)
     map = LaunchConfiguration("map")
-    
+
+    if use_ekf.lower() in ("true", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_{vehicle}_ekf.yaml"
+    else:
+        nav2_params_file_name = f"nav2_params_{vehicle}.yaml"
     nav2_params_file = PathJoinSubstitution(
-        [FindPackageShare("whi_nav2_bringup"), "config", "nav2_params_E1.yaml"]
+        [FindPackageShare("whi_nav2_bringup"), "config", nav2_params_file_name]
     )
     
     default_bt_xml_file = PathJoinSubstitution(
@@ -98,6 +102,16 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
         output='screen')
 
+    launch_nodes = [
+        start_whi_motion_hw_if_cmd,
+        start_lakibeam1_cmd,
+        start_nav2_bringup_cmd,
+        start_rviz_cmd
+    ]
+
+    return launch_nodes
+
+def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'use_sim_time', default_value='false',
@@ -117,8 +131,5 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
             description='Full path to map file to load'),
-        start_whi_motion_hw_if_cmd,
-        start_lakibeam1_cmd,
-        start_nav2_bringup_cmd,
-        start_rviz_cmd
+        OpaqueFunction(function=launch_setup)
     ])
