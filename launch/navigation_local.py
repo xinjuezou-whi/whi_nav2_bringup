@@ -28,12 +28,17 @@ def launch_setup(context, *args, **kwargs):
     vehicle = LaunchConfiguration("vehicle").perform(context)
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
+    local_planner = LaunchConfiguration("local_planner").perform(context)
     map = LaunchConfiguration("map")
 
-    if use_ekf.lower() in ("true", "1"): # in case it is a string
-        nav2_params_file_name = f"nav2_params_{vehicle}_ekf.yaml"
+    if local_planner.lower() in ("dwb", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_dwb"
     else:
-        nav2_params_file_name = f"nav2_params_{vehicle}.yaml"
+        nav2_params_file_name = f"nav2_params"
+    if use_ekf.lower() in ("true", "1"): # in case it is a string
+        nav2_params_file_name = nav2_params_file_name + f"_ekf_{vehicle}.yaml"
+    else:
+        nav2_params_file_name = nav2_params_file_name + f"_{vehicle}.yaml"
     nav2_params_file = PathJoinSubstitution(
         [FindPackageShare("whi_nav2_bringup"), "config", nav2_params_file_name]
     )
@@ -128,6 +133,9 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'use_ekf', default_value='true',
             description='Use ekf to fuse localization'),
+        DeclareLaunchArgument(
+            'local_planner', default_value='rpp',
+            description='The local planner to use'),
         DeclareLaunchArgument(
             'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
             description='Full path to map file to load'),

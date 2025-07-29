@@ -59,7 +59,7 @@ bt_navigator:
     use_sim_time: False
     global_frame: map
     robot_base_frame: base_link
-    odom_topic: odom
+    odom_topic: odometry/filtered
     default_bt_xml_filename: "navigate_w_replanning_and_recovery.xml"
     plugin_lib_names:
     - nav2_compute_path_to_pose_action_bt_node
@@ -113,35 +113,46 @@ controller_server:
       yaw_goal_tolerance: 0.25
       stateful: True
     FollowPath:
-      # Regulated Pure Pursuit
-      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.5
-      use_velocity_scaled_lookahead_dist: false
-      lookahead_dist: 0.6     # effective when use_velocity_scaled_lookahead_dist is false
-      min_lookahead_dist: 0.3 # effective when use_velocity_scaled_lookahead_dist is true
-      max_lookahead_dist: 0.9 # effective when use_velocity_scaled_lookahead_dist is true
-      lookahead_time: 1.5     # effective when use_velocity_scaled_lookahead_dist is true
-      use_rotate_to_heading: true
-      rotate_to_heading_angular_vel: 1.8 # the angular velocity to use while the use_rotate_to_heading is true
-      max_angular_accel: 3.2             # the max angular acceleration to use while the use_rotate_to_heading is true
-      rotate_to_heading_min_angle: 0.785 # The difference in the path orientation and the starting robot orientation to trigger a rotate in place while the use_rotate_to_heading is true
-      allow_reversing: false # both use_rotate_to_heading and allow_reversing cannot be set to true at the same time
-      transform_tolerance: 0.1
-      min_approach_linear_velocity: 0.08
-      approach_velocity_scaling_dist: 0.6
-      use_collision_detection: true
-      max_allowed_time_to_collision: 1.0 # effective when use_collision_detection is true
-      use_regulated_linear_velocity_scaling: true
-      regulated_linear_scaling_min_radius: 0.9 # effective when use_regulated_linear_velocity_scaling is true
-      regulated_linear_scaling_min_speed: 0.2 # effective when use_regulated_linear_velocity_scaling is true
-      use_fixed_curvature_lookahead: false
-      curvature_lookahead_dist: 0.25
-      use_cost_regulated_linear_velocity_scaling: false
-      cost_scaling_dist: 0.3 # effective when use_cost_regulated_linear_velocity_scaling is true
-      cost_scaling_gain: 1.0 # effective when use_cost_regulated_linear_velocity_scaling is true
-      max_robot_pose_search_dist: 10.0
-      min_distance_to_obstacle: 0.5
-      stateful: true
+      # DWB
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: True
+      min_vel_x: 0.0
+      min_vel_y: 0.0
+      max_vel_x: 0.26
+      max_vel_y: 0.0
+      max_vel_theta: 1.0
+      min_speed_xy: 0.0
+      max_speed_xy: 0.26
+      min_speed_theta: 0.0
+      acc_lim_x: 2.5
+      acc_lim_y: 0.0
+      acc_lim_theta: 3.2
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
+      decel_lim_theta: -3.2
+      vx_samples: 20
+      vy_samples: 5
+      vtheta_samples: 20
+      sim_time: 1.7
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      transform_tolerance: 0.2
+      xy_goal_tolerance: 0.25
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: True
+      stateful: True
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      BaseObstacle.scale: 0.02
+      PathAlign.scale: 32.0
+      PathAlign.forward_point_distance: 0.1
+      GoalAlign.scale: 24.0
+      GoalAlign.forward_point_distance: 0.1
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
+      RegulatedPurePursuit
 
 controller_server_rclcpp_node:
   ros__parameters:
