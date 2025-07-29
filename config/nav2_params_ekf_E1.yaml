@@ -93,9 +93,9 @@ controller_server:
   ros__parameters:
     use_sim_time: False
     controller_frequency: 20.0
-    # enable_stamped_cmd_vel: true # does not work on foxy
+    enable_stamped_cmd_vel: false # does not work on foxy
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.5
+    min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
     progress_checker_plugin: "progress_checker"
     goal_checker_plugin: "goal_checker"
@@ -104,7 +104,7 @@ controller_server:
     # Progress checker parameters
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.5
+      required_movement_radius: 0.25
       movement_time_allowance: 10.0
     # Goal checker parameters
     goal_checker:
@@ -115,31 +115,31 @@ controller_server:
     FollowPath:
       # Regulated Pure Pursuit
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.5
+      desired_linear_vel: 0.6
       use_velocity_scaled_lookahead_dist: false
       lookahead_dist: 0.6     # effective when use_velocity_scaled_lookahead_dist is false
       min_lookahead_dist: 0.3 # effective when use_velocity_scaled_lookahead_dist is true
-      max_lookahead_dist: 0.9 # effective when use_velocity_scaled_lookahead_dist is true
+      max_lookahead_dist: 1.0 # effective when use_velocity_scaled_lookahead_dist is true
       lookahead_time: 1.5     # effective when use_velocity_scaled_lookahead_dist is true
       use_rotate_to_heading: true
-      rotate_to_heading_angular_vel: 1.8 # the angular velocity to use while the use_rotate_to_heading is true
-      max_angular_accel: 3.2             # the max angular acceleration to use while the use_rotate_to_heading is true
-      rotate_to_heading_min_angle: 0.785 # The difference in the path orientation and the starting robot orientation to trigger a rotate in place while the use_rotate_to_heading is true
+      rotate_to_heading_angular_vel: 0.6  # the angular velocity to use while the use_rotate_to_heading is true
+      max_angular_accel: 3.2              # the max angular acceleration to use while the use_rotate_to_heading is true
+      rotate_to_heading_min_angle: 0.5236 # The difference in the path orientation and the starting robot orientation to trigger a rotate in place while the use_rotate_to_heading is true
       allow_reversing: false # both use_rotate_to_heading and allow_reversing cannot be set to true at the same time
-      transform_tolerance: 0.1
+      transform_tolerance: 0.2
       min_approach_linear_velocity: 0.08
       approach_velocity_scaling_dist: 0.6
       use_collision_detection: true
       max_allowed_time_to_collision: 1.0 # effective when use_collision_detection is true
       use_regulated_linear_velocity_scaling: true
-      regulated_linear_scaling_min_radius: 0.9 # effective when use_regulated_linear_velocity_scaling is true
-      regulated_linear_scaling_min_speed: 0.2 # effective when use_regulated_linear_velocity_scaling is true
+      regulated_linear_scaling_min_radius: 0.9  # effective when use_regulated_linear_velocity_scaling is true
+      regulated_linear_scaling_min_speed: 0.25  # effective when use_regulated_linear_velocity_scaling is true
       use_fixed_curvature_lookahead: false
-      curvature_lookahead_dist: 0.25
+      curvature_lookahead_dist: 0.6
       use_cost_regulated_linear_velocity_scaling: false
       cost_scaling_dist: 0.3 # effective when use_cost_regulated_linear_velocity_scaling is true
       cost_scaling_gain: 1.0 # effective when use_cost_regulated_linear_velocity_scaling is true
-      max_robot_pose_search_dist: 10.0
+      max_robot_pose_search_dist: 8.0
       min_distance_to_obstacle: 0.5
       stateful: true
 
@@ -156,9 +156,10 @@ local_costmap:
       robot_base_frame: base_link
       use_sim_time: False
       rolling_window: true
-      width: 3
-      height: 3
+      width: 4
+      height: 4
       resolution: 0.05
+      inflation_radius: 2.0
       # robot_radius: 0.22
       footprint: "[[0.418, 0.305], [0.418, -0.305], [-0.418, -0.305], [-0.418, 0.305]]"
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
@@ -204,14 +205,15 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
+      update_frequency: 5.0
+      publish_frequency: 2.0
       global_frame: map
       robot_base_frame: base_link
       use_sim_time: False
       # robot_radius: 0.22
       footprint: "[[0.418, 0.305], [0.418, -0.305], [-0.418, -0.305], [-0.418, 0.305]]"
       resolution: 0.05
+      inflation_radius: 2.0
       plugins: ["static_layer", "obstacle_layer", "voxel_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -275,6 +277,22 @@ planner_server:
       use_astar: false
       allow_unknown: true
 
+      # plugin: "smac_planner/SmacPlanner2D" # In Iron and older versions, "/" was used instead of "::"
+      # tolerance: 0.125                      # tolerance for planning if unable to reach exact pose, in meters
+      # downsample_costmap: false             # whether or not to downsample the map
+      # downsampling_factor: 1                # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
+      # allow_unknown: true                   # allow traveling in unknown space
+      # max_iterations: 1000000               # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
+      # max_on_approach_iterations: 1000      # maximum number of iterations to attempt to reach goal once in tolerance
+      # max_planning_time: 2.0                # max time in s for planner to plan, smooth
+      # cost_travel_multiplier: 2.0           # Cost multiplier to apply to search to steer away from high cost areas. Larger values will place in the center of aisles more exactly (if non-`FREE` cost potential field exists) but take slightly longer to compute. To optimize for speed, a value of 1.0 is reasonable. A reasonable tradeoff value is 2.0. A value of 0.0 effective disables steering away from obstacles and acts like a naive binary search A*.
+      # use_final_approach_orientation: false # Whether to set the final path pose at the goal's orientation to the requested orientation (false) or in line with the approach angle so the robot doesn't rotate to heading (true)
+      # smoother:
+      #   max_iterations: 1000
+      #   w_smooth: 0.3
+      #   w_data: 0.2
+      #   tolerance: 1.0e-10
+
 planner_server_rclcpp_node:
   ros__parameters:
     use_sim_time: False
@@ -296,7 +314,7 @@ recoveries_server:
     transform_timeout: 0.1
     use_sim_time: False
     simulate_ahead_time: 2.0
-    max_rotational_vel: 1.0
+    max_rotational_vel: 0.8
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
 
