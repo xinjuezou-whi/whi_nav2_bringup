@@ -44,7 +44,7 @@ def launch_setup(context, *args, **kwargs):
     )
     
     default_bt_xml_file = PathJoinSubstitution(
-        [FindPackageShare("nav2_bt_navigator"), "behavior_trees", "navigate_w_replanning_and_recovery.xml"]
+        [FindPackageShare("whi_nav2_bringup"), "behavior_trees", "navigate_w_replanning_and_recovery_registration.xml"]
     )
 
     nav2_bringup_launch_file = PathJoinSubstitution([
