@@ -97,6 +97,27 @@ def launch_setup(context, *args, **kwargs):
             'output_topic0': 'scan',
         }.items()
     )
+
+    # pose registration
+    start_pose_registration_cmd = Node(
+        package='whi_pose_registration_server',
+        executable='whi_pose_registration_server',
+        name='whi_pose_registration_server',
+        parameters=[nav2_params_file],
+        output='screen'
+    )
+    
+    # life cycle nodes
+    lifecycle_nodes = ['whi_pose_registration_server']
+    start_life_cycle_nodes_cmd = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_whi',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'autostart': True},
+                    {'node_names': lifecycle_nodes}]
+    )
     
     # rviz visualization
     start_rviz_cmd = Node(
@@ -105,9 +126,12 @@ def launch_setup(context, *args, **kwargs):
         name='rviz2',
         arguments=['-d', rviz_config_file],
         parameters=[{'use_sim_time': use_sim_time}],
-        output='screen')
+        output='screen'
+    )
 
     launch_nodes = [
+        start_pose_registration_cmd,
+        start_life_cycle_nodes_cmd,
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
         start_nav2_bringup_cmd,
