@@ -45,7 +45,7 @@ def launch_setup(context, *args, **kwargs):
         [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping.rviz"]
     )
     slam_toolbox_config_file = PathJoinSubstitution(
-        [FindPackageShare("slam_toolbox"), "config", "mapper_params_online_async.yaml"]
+        [FindPackageShare("whi_nav2_bringup"), "config", "mapper_params_online_async.yaml"]
     )
 
     # Nodes launching commands
