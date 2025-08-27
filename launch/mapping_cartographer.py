@@ -21,8 +21,34 @@ from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 import os
 from ament_index_python.packages import get_package_share_directory
+import subprocess
+
+# check if a process name appears in `ps aux`
+def is_process_running(name: str) -> bool:
+    try:
+        # get full command lines
+        output = subprocess.check_output(["ps", "-eo", "args"], text=True)
+        for line in output.splitlines():
+            if name in line:  # substring check is enough for your case
+                return True
+        return False
+    except Exception as e:
+        print(f"process check failed: {e}")
+        return False
 
 def launch_setup(context, *args, **kwargs):
+    unique_processes = [
+        "whi_rc_bridge_node",
+        "whi_indicators_node",
+        "whi_modbus_io_node",
+        "whi_imu_node",
+        "whi_battery_monitor_node",
+    ]
+    for exe in unique_processes:
+        if is_process_running(exe):
+            print(f"running process detected: {exe} is already running. Aborting launch.")
+            return []
+
     # Input parameters declaration
     # evaluate substitutions at runtime
     namespace = LaunchConfiguration('namespace')
