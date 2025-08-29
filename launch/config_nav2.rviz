@@ -7,15 +7,17 @@ Panels:
         - /Global Options1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Controller1/Local Plan1
+        - /Controller1/Local Costmap1/Update Topic1
         - /Odom_filtered1/Shape1
       Splitter Ratio: 0.5833333134651184
-    Tree Height: 438
+    Tree Height: 199
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
     Expanded:
       - /Publish Point1
+      - /Interact1
+      - /2D Goal Pose1
     Name: Tool Properties
     Splitter Ratio: 0.5886790156364441
   - Class: rviz_common/Views
@@ -44,7 +46,7 @@ Visualization Manager:
         Z: 0
       Plane: XY
       Plane Cell Count: 10
-      Reference Frame: <Fixed Frame>
+      Reference Frame: map
       Value: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -137,6 +139,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        mic:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         plate_base:
           Alpha: 1
           Show Axes: false
@@ -186,9 +193,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 67
+      Max Intensity: 255
       Min Color: 0; 0; 0
-      Min Intensity: 5
+      Min Intensity: 50
       Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
@@ -395,10 +402,10 @@ Visualization Manager:
       Name: Global Planner
     - Class: rviz_common/Group
       Displays:
-        - Alpha: 0.20000000298023224
+        - Alpha: 0.10000000149011612
           Class: rviz_default_plugins/Map
-          Color Scheme: raw
-          Draw Behind: true
+          Color Scheme: costmap
+          Draw Behind: false
           Enabled: true
           Name: Local Costmap
           Topic:
@@ -654,6 +661,43 @@ Visualization Manager:
       base_frame: base_link
       manipulator state topic: /actuator_state
       temperature and humidity topic: /temperature_humidity
+    - Class: whi_rviz_plugins/Navi_waypoints
+      ETA Font Color: 255; 255; 255
+      ETA Font Size: 1
+      Enabled: true
+      Goal xy tolerance: 0.15000000596046448
+      Goal yaw tolerance: 0.15000000596046448
+      Marker Color: 0; 255; 0
+      Marker Height: 1
+      Marker Size: 1
+      Max recovery try count: 3
+      Mode: Local
+      Motion state topic: /motion_state
+      Name: Navi_waypoints
+      Remote controller state topic: /rc_state
+      Show ETA: true
+      Software EStop topic: /estop
+      Stuck timeout(s): 10
+      Value: true
+      Whether to use stamped twist: true
+      base_frame: base_link
+    - Angular step: 0.10000000149011612
+      Class: whi_rviz_plugins/Teleop
+      Enable teleop: false
+      Enabled: true
+      Linear step: 0.009999999776482582
+      Max angular: 1.5700000524520874
+      Max linear: 1.5
+      Min angular: 0.10000000149011612
+      Min linear: 0.07999999821186066
+      Motion state topic: motion_state
+      Name: Teleop
+      Publish frequency(Hz): 5
+      Remote controller state topic: rc_state
+      Software EStop topic: estop
+      Twist message topic: cmd_vel
+      Use stamped velocity: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -682,6 +726,15 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /clicked_point
     - Class: nav2_rviz_plugins/GoalTool
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: goal_pose
   Transformation:
     Current:
       Class: rviz_default_plugins/TF
@@ -698,31 +751,35 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 24.649518966674805
+      Scale: 72.1161117553711
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
-      X: 1.7720435857772827
-      Y: -0.7151849269866943
+      X: -5.411466598510742
+      Y: 15.945636749267578
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 932
+  Height: 1016
   Hide Left Dock: false
   Hide Right Dock: true
   Navi_state:
     collapsed: false
+  Navi_waypoints:
+    collapsed: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000019a000002b0fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000001f3000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000018004e0061007600690067006100740069006f006e002000320100000236000000b7000000b700fffffffb0000001e005200650061006c00730065006e0073006500430061006d00650072006100000002c6000000c10000002800ffffff000000010000010f0000034afc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000034a000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000060900000094fc0100000003fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000fb00000014004e006100760069005f007300740061007400650100000000000006090000045b00ffffff00000469000002b000000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000025900000304fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000104000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fc00000147000001fa000001870100001cfa000000000100000003fb0000001c004e006100760069005f0077006100790070006f0069006e007400730100000000ffffffff0000025900fffffffb0000000c00540065006c0065006f00700100000000ffffffff0000015e00fffffffb00000018004e0061007600690067006100740069006f006e00200032010000000000000259000000a700fffffffb0000001e005200650061006c00730065006e0073006500430061006d00650072006100000002c6000000c10000002800ffffff000000010000010f0000034afc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000034a000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073800000094fc0100000003fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000fb00000014004e006100760069005f007300740061007400650100000000000007380000046c00ffffff000004d90000030400000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   RealsenseCamera:
     collapsed: false
   Selection:
+    collapsed: false
+  Teleop:
     collapsed: false
   Tool Properties:
     collapsed: false
   Views:
     collapsed: true
-  Width: 1545
-  X: 75
+  Width: 1848
+  X: 72
   Y: 27
