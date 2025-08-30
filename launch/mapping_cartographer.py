@@ -18,7 +18,6 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
-from nav2_common.launch import RewrittenYaml
 import os
 from ament_index_python.packages import get_package_share_directory
 import subprocess
@@ -97,44 +96,46 @@ def launch_setup(context, *args, **kwargs):
         }.items()
     )
 
+    # cartographer
     start_cartographer_cmd = Node(
-            package='cartographer_ros',
-            executable='cartographer_node',
-            name='cartographer_node',
-            output='screen',
-            parameters=[{'use_sim_time': use_sim_time}],
-            arguments=['-configuration_directory', cartographer_config_dir,
-                       '-configuration_basename', cartographer_config_file]
+        package='cartographer_ros',
+        executable='cartographer_node',
+        name='cartographer_node',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
+        arguments=['-configuration_directory', cartographer_config_dir,
+                    '-configuration_basename', cartographer_config_file]
     )
     
     start_occupancy_grid_cmd = Node(
-            package='cartographer_ros',
-            executable='occupancy_grid_node',
-            name='occupancy_grid_node',
-            output='screen',
-            parameters=[{'use_sim_time': use_sim_time}],
-            arguments=['-resolution', str(0.05), '-publish_period_sec', str(1.0)]
+        package='cartographer_ros',
+        executable='occupancy_grid_node',
+        name='occupancy_grid_node',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
+        arguments=['-resolution', str(0.05), '-publish_period_sec', str(1.0)]
     )
 
+    # map server
     start_map_saver_server_cmd = Node(
-            package='nav2_map_server',
-            executable='map_saver_server',
-            output='screen',
-            parameters=[
-                {'save_map_timeout': 2.0},
-                {'free_thresh_default': 0.25},
-                {'occupied_thresh_default': 0.65}]
+        package='nav2_map_server',
+        executable='map_saver_server',
+        output='screen',
+        parameters=[
+            {'save_map_timeout': 10},
+            {'free_thresh_default': 0.25},
+            {'occupied_thresh_default': 0.65}]
     )
 
     lifecycle_nodes = ['map_saver']
     start_lifecycle_manager_cmd = Node(
-            package='nav2_lifecycle_manager',
-            executable='lifecycle_manager',
-            name='lifecycle_manager_slam',
-            output='screen',
-            parameters=[{'use_sim_time': use_sim_time},
-                        {'autostart': autostart},
-                        {'node_names': lifecycle_nodes}]
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_slam',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'autostart': autostart},
+                    {'node_names': lifecycle_nodes}]
     )
 
     # rviz visualization

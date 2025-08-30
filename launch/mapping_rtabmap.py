@@ -18,7 +18,6 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
-from nav2_common.launch import RewrittenYaml
 import subprocess
 
 # check if a process name appears in `ps aux`
@@ -62,16 +61,13 @@ def launch_setup(context, *args, **kwargs):
         'launch',
         'bringup.py'
     ])
-    lidar_lakibeam1_launch_file = PathJoinSubstitution([
-        FindPackageShare('lakibeam1'),
+    lidar_rslidar_launch_file = PathJoinSubstitution([
+        FindPackageShare('rslidar_sdk'),
         'launch',
-        'lakibeam1_scan.launch.py'
+        'start.py'
     ])
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping.rviz"]
-    )
-    slam_toolbox_config_file = PathJoinSubstitution(
-        [FindPackageShare("whi_nav2_bringup"), "config", "mapper_params_online_async.yaml"]
+        [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping_3d.rviz"]
     )
 
     # Nodes launching commands
@@ -85,33 +81,47 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # LiDAR
-    start_lakibeam1_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(lidar_lakibeam1_launch_file),
+    start_rslidar_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(lidar_rslidar_launch_file),
         launch_arguments={
-            'frame_id': 'laser',
-            'output_topic0': 'scan',
+            'start_rviz': 'false',
         }.items()
     )
 
-    # slam toolbox
-    slam_toolbox_params = RewrittenYaml(
-        source_file=slam_toolbox_config_file,
-        root_key=namespace,
-        param_rewrites={
+    # rtab map
+    start_rtabmap_slam_cmd = Node(
+        package='rtabmap_slam', executable='rtabmap', output='screen',
+        parameters=[{
+            'frame_id': 'base_link',
+            'odom_frame_id': 'odom',
+            'subscribe_depth': False,
+            'subscribe_rgb': False,
+            'subscribe_scan_cloud': True,
+            'approx_sync': True,
+            'wait_for_transform': 0.2,
+            'queue_size': 30, # increase from default 10
             'use_sim_time': use_sim_time,
-            'odom_frame': 'odom',
-            'base_frame': 'base_link',
-            'scan_topic': 'scan',
-            'resolution': '0.05',
-        },
-        convert_types=True
-    )
-    start_slam_toolbox_cmd = Node(
-        package='slam_toolbox',
-        executable='async_slam_toolbox_node',
-        name='slam_toolbox',
-        output='screen',
-        parameters=[slam_toolbox_params]
+            'Grid/3D': 'false',
+            'Grid/CellSize': '0.1',
+            'Grid/RayTracing': 'true',
+            'Grid/RayTracingRange': '6.0',
+            'Grid/ClusterRadius': '0.1',
+            'Grid/MinClusterSize': '20',
+            'Grid/ScanVoxelSize': '0.05',
+            'Grid/RangeMin': '0.6',
+            'Grid/RangeMax': '80.0',
+            'Grid/MaxGroundHeight': '0.2',
+            'Grid/MinGroundHeight': '-0.2',
+            'Grid/FlatObstacleDetected': 'true',
+            'Reg/Force3DoF': 'true',
+            'Optimizer/Iterations': '30',
+            'Icp/PointToPlane': 'true',
+            'Icp/MaxCorrespondenceDistance': '2.0',
+            'Icp/Iterations': '20',
+        }],
+        remappings=[
+            ('scan_cloud', '/rslidar_points')
+        ],
     )
 
     # map server
@@ -119,7 +129,10 @@ def launch_setup(context, *args, **kwargs):
         package='nav2_map_server',
         executable='map_saver_server',
         output='screen',
-        parameters=[slam_toolbox_params]
+        parameters=[
+            {'save_map_timeout': 20},
+            {'free_thresh_default': 0.25},
+            {'occupied_thresh_default': 0.65}]
     )
 
     lifecycle_nodes = ['map_saver']
@@ -143,8 +156,8 @@ def launch_setup(context, *args, **kwargs):
 
     launch_nodes = [
         start_whi_motion_hw_if_cmd,
-        start_lakibeam1_cmd,
-        start_slam_toolbox_cmd,
+        start_rslidar_cmd,
+        start_rtabmap_slam_cmd,
         start_map_saver_server_cmd,
         start_lifecycle_manager_cmd,
         start_rviz_cmd
@@ -167,5 +180,7 @@ def generate_launch_description():
             description="the mobile robot's dynamic model"),
         DeclareLaunchArgument('use_ekf', default_value='true',
             description='Use ekf to fuse localization'),
+        DeclareLaunchArgument('deskewing', default_value='false',
+            description='Enable lidar deskewing'),
         OpaqueFunction(function=launch_setup)
     ])

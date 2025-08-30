@@ -156,6 +156,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        mic:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         plate_base:
           Alpha: 1
           Show Axes: false
@@ -191,14 +196,14 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 179
+      Max Intensity: 69
       Min Color: 0; 0; 0
-      Min Intensity: 37
+      Min Intensity: 8
       Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.009999999776482582
+      Size (m): 0.029999999329447746
       Style: Flat Squares
       Topic:
         Depth: 5
@@ -246,6 +251,8 @@ Visualization Manager:
           Value: true
         map:
           Value: true
+        mic:
+          Value: true
         odom:
           Value: true
         plate_base:
@@ -288,6 +295,8 @@ Visualization Manager:
                 link_right_rear_steer:
                   link_right_rear_wheel:
                     {}
+                mic:
+                  {}
                 plate_cover:
                   {}
       Update Interval: 0
@@ -361,7 +370,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 43.1646842956543
+      Scale: 58.74996566772461
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
       X: 1.1381179094314575

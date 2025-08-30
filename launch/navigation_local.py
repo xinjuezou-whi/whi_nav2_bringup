@@ -91,6 +91,12 @@ def launch_setup(context, *args, **kwargs):
         'lakibeam1_scan.launch.py'
     ])
 
+    lidar_rslidar_launch_file = PathJoinSubstitution([
+        FindPackageShare('rslidar_sdk'),
+        'launch',
+        'start.py'
+    ])
+
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("whi_nav2_bringup"), "launch", "config_nav2.rviz"]
     )
@@ -121,6 +127,13 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={
             'frame_id': 'laser',
             'output_topic0': 'scan',
+        }.items()
+    )
+
+    start_rslidar_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(lidar_rslidar_launch_file),
+        launch_arguments={
+            'start_rviz': 'false',
         }.items()
     )
 
@@ -160,6 +173,7 @@ def launch_setup(context, *args, **kwargs):
         start_life_cycle_nodes_cmd,
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
+        start_rslidar_cmd,
         start_nav2_bringup_cmd,
         start_rviz_cmd
     ]
