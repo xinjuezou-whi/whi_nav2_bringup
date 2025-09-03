@@ -209,8 +209,8 @@ def launch_setup(context, *args, **kwargs):
             'Grid/RayTracing': 'true',
             'Grid/RayTracingRange': '6.0',
             'Grid/ClusterRadius': '0.1',
-            'Grid/MinClusterSize': '20',
-            'Grid/ScanVoxelSize': '0.05',
+            'Grid/MinClusterSize': '30',
+            'Grid/ScanVoxelSize': '0.1',
             'Grid/RangeMin': '0.6',
             'Grid/RangeMax': '80.0',
             'Grid/MaxGroundHeight': '0.2',
@@ -219,8 +219,8 @@ def launch_setup(context, *args, **kwargs):
             'Reg/Force3DoF': 'true',
             'Optimizer/Iterations': '30',
             'Icp/PointToPlane': 'true',
-            'Icp/MaxCorrespondenceDistance': '2.0',
-            'Icp/Iterations': '20',
+            'Icp/MaxCorrespondenceDistance': '6.0',
+            'Icp/Iterations': '30',
         }],
         remappings=[
             ('scan_cloud', '/rslidar_points')
