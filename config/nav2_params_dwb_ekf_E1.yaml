@@ -221,9 +221,9 @@ local_costmap:
         z_voxels: 16
         max_obstacle_height: 2.0
         mark_threshold: 0
-        observation_sources: pointcloud
-        pointcloud:
-          topic: /intel_realsense_r200_depth/points
+        observation_sources: obstacles
+        obstacles:
+          topic: /rslidar_points
           max_obstacle_height: 2.0
           clearing: True
           marking: True
