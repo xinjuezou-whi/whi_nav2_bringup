@@ -201,15 +201,15 @@ def launch_setup(context, *args, **kwargs):
             'subscribe_rgb': False,
             'subscribe_scan_cloud': True,
             'approx_sync': True,
-            'wait_for_transform': 0.2,
-            'queue_size': 30, # increase from default 10
+            'wait_for_transform': 0.25,
+            'queue_size': 50, # increase from default 10
             'use_sim_time': use_sim_time,
             'Grid/3D': 'false',
             'Grid/CellSize': '0.1',
             'Grid/RayTracing': 'true',
             'Grid/RayTracingRange': '6.0',
-            'Grid/ClusterRadius': '0.1',
-            'Grid/MinClusterSize': '25',
+            'Grid/ClusterRadius': '0.15',
+            'Grid/MinClusterSize': '20',
             'Grid/ScanVoxelSize': '0.1',
             'Grid/RangeMin': '0.6',
             'Grid/RangeMax': '80.0',
@@ -224,6 +224,9 @@ def launch_setup(context, *args, **kwargs):
         }],
         remappings=[
             ('scan_cloud', '/rslidar_points')
+        ],
+        arguments=[
+            '-d', # This will delete the previous database (~/.ros/rtabmap.db)
         ],
         condition=IfCondition(LaunchConfiguration("enable_odom")),
     )
