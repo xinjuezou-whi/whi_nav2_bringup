@@ -18,6 +18,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
+from launch.conditions import IfCondition, UnlessCondition
 import os
 from ament_index_python.packages import get_package_share_directory
 import subprocess
@@ -56,6 +57,7 @@ def launch_setup(context, *args, **kwargs):
     vehicle = LaunchConfiguration("vehicle").perform(context)
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
+    use_3d = LaunchConfiguration("use_3d").perform(context)
 
     # Getting directories and launch-files
     whi_motion_hw_if_launch_file = PathJoinSubstitution([
@@ -68,14 +70,30 @@ def launch_setup(context, *args, **kwargs):
         'launch',
         'lakibeam1_scan.launch.py'
     ])
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping.rviz"]
-    )
-    cartographer_config_dir = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'config')
+    lidar_rslidar_launch_file = PathJoinSubstitution([
+        FindPackageShare('rslidar_sdk'),
+        'launch',
+        'start.py'
+    ])
+
     if use_ekf.lower() in ("true", "1"): # in case it is a string
-        cartographer_config_file = "nav2_lds_2d_ekf.lua"
+        odom_remap = ('/odom', '/odometry/filtered')
     else:
-        cartographer_config_file = "nav2_lds_2d.lua"
+        odom_remap = ('/odom', '/odom')
+
+    cartographer_config_dir = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'config')
+    if use_3d.lower() in ("true", "1"): # in case it is a string
+        cartographer_config_file = "backpack_3d.lua"
+        rviz_config_file = PathJoinSubstitution(
+            [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping_3d.rviz"])
+        remaps=[('/points2', '/rslidar_points'),
+                ('/imu', '/imu_data'),
+                odom_remap]
+    else:
+        cartographer_config_file = "backpack_2d.lua"
+        rviz_config_file = PathJoinSubstitution(
+            [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping.rviz"])
+        remaps=[odom_remap]
 
     # Nodes launching commands
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
@@ -93,7 +111,16 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={
             'frame_id': 'laser',
             'output_topic0': 'scan',
-        }.items()
+        }.items(),
+        condition=UnlessCondition(LaunchConfiguration("use_3d"))
+    )
+
+    start_rslidar_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(lidar_rslidar_launch_file),
+        launch_arguments={
+            'start_rviz': 'false',
+        }.items(),
+        condition=IfCondition(LaunchConfiguration("use_3d"))
     )
 
     # cartographer
@@ -104,7 +131,8 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[{'use_sim_time': use_sim_time}],
         arguments=['-configuration_directory', cartographer_config_dir,
-                    '-configuration_basename', cartographer_config_file]
+                   '-configuration_basename', cartographer_config_file],
+        remappings=remaps,
     )
     
     start_occupancy_grid_cmd = Node(
@@ -113,7 +141,7 @@ def launch_setup(context, *args, **kwargs):
         name='occupancy_grid_node',
         output='screen',
         parameters=[{'use_sim_time': use_sim_time}],
-        arguments=['-resolution', str(0.05), '-publish_period_sec', str(1.0)]
+        arguments=['-resolution', str(0.05), '-publish_period_sec', str(1.0)],
     )
 
     # map server
@@ -149,6 +177,7 @@ def launch_setup(context, *args, **kwargs):
     launch_nodes = [
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
+        start_rslidar_cmd,
         start_cartographer_cmd,
         start_occupancy_grid_cmd,
         start_map_saver_server_cmd,
@@ -173,5 +202,7 @@ def generate_launch_description():
             description="the mobile robot's dynamic model"),
         DeclareLaunchArgument('use_ekf', default_value='true',
             description='Use ekf to fuse localization'),
+        DeclareLaunchArgument('use_3d', default_value='false',
+            description='Use multi lidar for 3D mapping'),
         OpaqueFunction(function=launch_setup)
     ])

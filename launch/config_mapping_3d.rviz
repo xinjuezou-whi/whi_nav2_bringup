@@ -83,6 +83,99 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        battery:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        imu:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        laser:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        laser_multi:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_left_front_steer:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_left_front_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_left_rear_steer:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_left_rear_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_lift_linear:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_lift_linear_fix:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link_right_front_steer:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_right_front_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_right_rear_steer:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_right_rear_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        mic:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        plate_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        plate_cover:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ptz_camera:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -93,11 +186,47 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        base_link:
+          Value: true
+        battery:
+          Value: true
+        imu:
+          Value: true
+        laser:
+          Value: true
         laser_multi:
+          Value: true
+        link_left_front_steer:
+          Value: true
+        link_left_front_wheel:
+          Value: true
+        link_left_rear_steer:
+          Value: true
+        link_left_rear_wheel:
+          Value: true
+        link_lift_linear:
+          Value: true
+        link_lift_linear_fix:
+          Value: true
+        link_right_front_steer:
+          Value: true
+        link_right_front_wheel:
+          Value: true
+        link_right_rear_steer:
+          Value: true
+        link_right_rear_wheel:
           Value: true
         map:
           Value: true
+        mic:
+          Value: true
         odom:
+          Value: true
+        plate_base:
+          Value: true
+        plate_cover:
+          Value: true
+        ptz_camera:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -107,7 +236,36 @@ Visualization Manager:
       Tree:
         map:
           odom:
-            {}
+            base_link:
+              plate_base:
+                battery:
+                  {}
+                imu:
+                  {}
+                laser:
+                  {}
+                laser_multi:
+                  {}
+                link_left_front_steer:
+                  link_left_front_wheel:
+                    {}
+                link_left_rear_steer:
+                  link_left_rear_wheel:
+                    {}
+                link_lift_linear_fix:
+                  link_lift_linear:
+                    ptz_camera:
+                      {}
+                link_right_front_steer:
+                  link_right_front_wheel:
+                    {}
+                link_right_rear_steer:
+                  link_right_rear_wheel:
+                    {}
+                mic:
+                  {}
+                plate_cover:
+                  {}
       Update Interval: 0
       Value: true
     - Angular step: 0.10000000149011612
@@ -142,7 +300,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 100
+      Max Intensity: 112
       Min Color: 0; 0; 0
       Min Intensity: 1
       Name: PointCloud2
@@ -203,7 +361,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 29.783138275146484
+      Distance: 25.390901565551758
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
