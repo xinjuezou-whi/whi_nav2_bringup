@@ -17,7 +17,7 @@
           <FollowPath path="{path}" controller_id="FollowPath"/>
           <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
         </RecoveryNode>
-        <!-- <PoseRegistration pose="{pose}" controller_id="PoseRegistration"/> -->
+        <!-- <PoseRegistration pose="{pose}" controller_id="ChargerRegistration"/> -->
       </PipelineSequence>
       <ReactiveFallback name="RecoveryFallback">
         <GoalUpdated/>

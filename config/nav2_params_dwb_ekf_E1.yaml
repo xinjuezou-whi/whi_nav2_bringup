@@ -175,8 +175,8 @@ controller_server_rclcpp_node:
 whi_pose_registration_server:
   ros__parameters:
     use_stamped_vel: false
-    controller_plugins: ["PoseRegistration"]
-    PoseRegistration:
+    controller_plugins: ["ChargerRegistration"]
+    ChargerRegistration:
       plugin: "whi_pose_registration_clients::ChargerPlanner"
 
 whi_pose_registration_server_rclcpp_node:

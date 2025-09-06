@@ -173,7 +173,7 @@ def launch_setup(context, *args, **kwargs):
         start_life_cycle_nodes_cmd,
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
-        start_rslidar_cmd,
+        # start_rslidar_cmd,
         start_nav2_bringup_cmd,
         start_rviz_cmd
     ]
