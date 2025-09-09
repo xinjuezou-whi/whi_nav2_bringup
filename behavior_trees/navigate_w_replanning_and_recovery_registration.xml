@@ -18,6 +18,7 @@
           <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
         </RecoveryNode>
         <!-- <PoseRegistration pose="{pose}" controller_id="ChargerRegistration"/> -->
+        <!-- <SpinToPath path="{path}" lookahead_distance="0.3" action_id="SpinToPath"/> -->
       </PipelineSequence>
       <ReactiveFallback name="RecoveryFallback">
         <GoalUpdated/>

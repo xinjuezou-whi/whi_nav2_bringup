@@ -183,6 +183,27 @@ whi_pose_registration_server_rclcpp_node:
   ros__parameters:
     use_sim_time: False
 
+# whi_nav2_bt_actions_server:
+#   ros__parameters:
+#     use_stamped_vel: false
+#     cycle_frequency: 10.0
+#     global_frame: odom
+#     robot_base_frame: base_link
+#     transform_tolerance: 0.2
+#     costmap_topic: local_costmap/costmap_raw
+#     footprint_topic: local_costmap/published_footprint
+#     action_plugins: ["SpinToPath"]
+#     SpinToPath:
+#       plugin: whi_nav2_bt_actions_server::SpinToPath
+#       simulate_ahead_time: 2.0
+#       min_rotational_vel: 0.1
+#       max_rotational_vel: 1.0
+#       rotational_acc_lim: 1.57
+
+# whi_nav2_bt_actions_server_rclcpp_node:
+#   ros__parameters:
+#     use_sim_time: False
+
 local_costmap:
   local_costmap:
     ros__parameters:
