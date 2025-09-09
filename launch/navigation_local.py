@@ -145,9 +145,21 @@ def launch_setup(context, *args, **kwargs):
         parameters=[nav2_params_file],
         output='screen'
     )
+
+    # bt actions server
+    start_bt_actions_server_cmd = Node(
+        package='whi_nav2_bt_actions_server',
+        executable='whi_nav2_bt_actions_server',
+        name='whi_nav2_bt_actions_server',
+        parameters=[nav2_params_file],
+        output='screen'
+    )
     
     # life cycle nodes
-    lifecycle_nodes = ['whi_pose_registration_server']
+    lifecycle_nodes = [
+        'whi_pose_registration_server',
+        'whi_nav2_bt_actions_server',
+    ]
     start_life_cycle_nodes_cmd = Node(
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
@@ -169,8 +181,9 @@ def launch_setup(context, *args, **kwargs):
     )
 
     launch_nodes = [
-        start_pose_registration_cmd,
-        start_life_cycle_nodes_cmd,
+        # start_pose_registration_cmd,
+        # start_bt_actions_server_cmd,
+        # start_life_cycle_nodes_cmd,
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
         # start_rslidar_cmd,
