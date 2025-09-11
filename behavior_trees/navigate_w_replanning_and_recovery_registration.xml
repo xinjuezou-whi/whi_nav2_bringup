@@ -1,25 +1,33 @@
-
-<!--
-  This Behavior Tree replans the global path periodically at 1 Hz and it also has
-  recovery actions.
--->
 <root main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
     <RecoveryNode number_of_retries="6" name="NavigateRecovery">
-      <PipelineSequence name="NavigateWithReplanning">
-        <RateController hz="1.0">
-          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
-            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
-            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-          </RecoveryNode>
-        </RateController>
-        <!-- <SpinToPath path="{path}" lookahead_distance="0.3" action_id="SpinToPath"/> -->
-        <RecoveryNode number_of_retries="1" name="FollowPath">
-          <FollowPath path="{path}" controller_id="FollowPath"/>
-          <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+      <Sequence name="NavigateWithSpinInit">
+        <!-- Step 1: Compute a path once -->
+        <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+
+        <!-- Step 2: Align with that path (atomic with RecoveryNode) -->
+        <RecoveryNode number_of_retries="1" name="SpinAlignmentStep">
+          <SpinToPath path="{path}" lookahead_distance="0.3" action_id="SpinToPath"/>
+          <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/> -->
+          <Wait wait_duration="0.2"/>
         </RecoveryNode>
-        <!-- <PoseRegistration pose="{pose}" controller_id="ChargerRegistration"/> -->
-      </PipelineSequence>
+
+        <!-- Step 3: Start continuous replanning + execution -->
+        <PipelineSequence name="NavigateWithReplanning">
+          <RateController hz="1.0">
+            <RecoveryNode number_of_retries="1" name="ComputePathToPoseRecovery">
+              <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+            </RecoveryNode>
+          </RateController>
+
+          <RecoveryNode number_of_retries="1" name="FollowPath">
+            <FollowPath path="{path}" controller_id="FollowPath"/>
+            <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+          </RecoveryNode>
+        </PipelineSequence>
+      </Sequence>
+
       <ReactiveFallback name="RecoveryFallback">
         <GoalUpdated/>
         <SequenceStar name="RecoveryActions">

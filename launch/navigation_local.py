@@ -70,7 +70,8 @@ def launch_setup(context, *args, **kwargs):
     )
     
     default_bt_xml_file = PathJoinSubstitution(
-        [FindPackageShare("whi_nav2_bringup"), "behavior_trees", "navigate_w_replanning_and_recovery_registration.xml"]
+        # [FindPackageShare("whi_nav2_bringup"), "behavior_trees", "navigate_w_replanning_and_recovery_registration.xml"]
+        [FindPackageShare("whi_nav2_bringup"), "behavior_trees", "navigate_plain_with_spin2path.xml"]
     )
 
     nav2_bringup_launch_file = PathJoinSubstitution([
@@ -181,9 +182,9 @@ def launch_setup(context, *args, **kwargs):
     )
 
     launch_nodes = [
-        # start_pose_registration_cmd,
-        # start_bt_actions_server_cmd,
-        # start_life_cycle_nodes_cmd,
+        start_pose_registration_cmd,
+        start_bt_actions_server_cmd,
+        start_life_cycle_nodes_cmd,
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
         # start_rslidar_cmd,
