@@ -40,7 +40,7 @@ amcl:
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
     resample_interval: 1
-    robot_model_type: "differential"
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
@@ -74,9 +74,16 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /odometry/filtered
-    default_bt_xml_filename: "navigate_w_replanning_and_recovery.xml"
+    # default_bt_xml_filename: "/home/nvidia/ros2_humble_ws/src/whi_nav2_bringup/behavior_trees/navigate_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/nvidia/ros2_humble_ws/src/whi_nav2_bringup/behavior_trees/navigate_plain_with_spin2path.xml"
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    enable_groot_monitoring: True
+    groot_zmq_publisher_port: 1666
+    groot_zmq_server_port: 1667
     plugin_lib_names:
     - nav2_compute_path_to_pose_action_bt_node
+    - nav2_compute_path_through_poses_action_bt_node
     - nav2_follow_path_action_bt_node
     - nav2_back_up_action_bt_node
     - nav2_spin_action_bt_node
@@ -98,6 +105,14 @@ bt_navigator:
     - nav2_transform_available_condition_bt_node
     - nav2_time_expired_condition_bt_node
     - nav2_distance_traveled_condition_bt_node
+    - nav2_single_trigger_bt_node
+    - nav2_is_battery_low_condition_bt_node
+    - nav2_navigate_through_poses_action_bt_node
+    - nav2_navigate_to_pose_action_bt_node
+    - nav2_remove_passed_goals_action_bt_node
+    - nav2_planner_selector_bt_node
+    - nav2_controller_selector_bt_node
+    - nav2_goal_checker_selector_bt_node
     - whi_nav2_pose_registration_action_bt_node
     - whi_nav2_spin_to_path_action_bt_node
 
@@ -113,21 +128,22 @@ controller_server:
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
     progress_checker_plugin: "progress_checker"
-    goal_checker_plugin: "goal_checker"
+    goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
 
     # Progress checker parameters
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.25
+      required_movement_radius: 0.2
       movement_time_allowance: 10.0
     # Goal checker parameters
-    goal_checker:
-      plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.2
-      yaw_goal_tolerance: 0.15
+    general_goal_checker:
       stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.25
     FollowPath:
       # DWB
       plugin: "dwb_core::DWBLocalPlanner"
@@ -148,12 +164,12 @@ controller_server:
       decel_lim_theta: -0.6
       vx_samples: 20
       vy_samples: 5
-      vtheta_samples: 20
-      sim_time: 1.7
+      vtheta_samples: 40
+      sim_time: 2.0
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.5
-      xy_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.1
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: True
       stateful: True
@@ -191,11 +207,11 @@ whi_nav2_bt_actions_server:
     global_frame: odom
     robot_base_frame: base_link
     transform_tolerance: 0.2
-    costmap_topic: local_costmap/costmap_raw
-    footprint_topic: local_costmap/published_footprint
-    action_plugins: ["SpinToPath"]
-    SpinToPath:
-      plugin: whi_nav2_bt_actions_server::SpinToPath
+    local_costmap_topic: local_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    action_plugins: ["spin_to_path"]
+    spin_to_path:
+      plugin: whi_nav2_bt_actions_server/SpinToPath
       simulate_ahead_time: 2.0
       min_rotational_vel: 0.1
       max_rotational_vel: 1.0
@@ -208,15 +224,15 @@ whi_nav2_bt_actions_server_rclcpp_node:
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 10.0
-      publish_frequency: 5.0
+      update_frequency: 5.0
+      publish_frequency: 2.0
       global_frame: odom
       robot_base_frame: base_link
       use_sim_time: False
       rolling_window: true
       width: 4
       height: 4
-      resolution: 0.1
+      resolution: 0.05
       # robot_radius: 0.22
       footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
@@ -232,7 +248,7 @@ local_costmap:
           data_type: "LaserScan"
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.55
+        inflation_radius: 1.0
         cost_scaling_factor: 3.0
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
@@ -319,14 +335,15 @@ global_costmap:
 map_server:
   ros__parameters:
     use_sim_time: False
-    yaml_filename: /home/nvidia/ros2_ws/field_test.yaml
+    yaml_filename: /home/nvidia/ros2_ws/field_test_hall.yaml
 
 map_saver:
   ros__parameters:
     use_sim_time: False
-    save_map_timeout: 5000
+    save_map_timeout: 10.0
     free_thresh_default: 0.25
     occupied_thresh_default: 0.65
+    map_subscribe_transient_local: True
 
 planner_server:
   ros__parameters:

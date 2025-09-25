@@ -5,7 +5,11 @@
 			<ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
 
 			<!-- Step 2: Align with that path (atomic with RecoveryNode) -->
-			<SpinToPath path="{path}" lookahead_distance="0.3" action_id="SpinToPath"/>
+			<RecoveryNode number_of_retries="1" name="SpinAlignmentRecovery">
+				<SpinToPath path="{path}" lookahead_distance="0.3"/>
+				<ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+				<!-- <Wait wait_duration="0.2"/> -->
+			</RecoveryNode>
 
 			<!-- Step 3: Start continuous replanning + execution -->
 			<PipelineSequence name="NavigateWithReplanning">
@@ -14,6 +18,8 @@
 				</RateController>
 
 				<FollowPath path="{path}" controller_id="FollowPath"/>
+
+				<!-- <PoseRegistration pose="{pose}" controller_id="ChargerRegistration"/> -->
 			</PipelineSequence>
 		</Sequence>
 	</BehaviorTree>

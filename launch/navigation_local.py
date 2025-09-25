@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -65,14 +68,8 @@ def launch_setup(context, *args, **kwargs):
         nav2_params_file_name = nav2_params_file_name + f"_ekf_{vehicle}.yaml"
     else:
         nav2_params_file_name = nav2_params_file_name + f"_{vehicle}.yaml"
-    nav2_params_file = PathJoinSubstitution(
-        [FindPackageShare("whi_nav2_bringup"), "config", nav2_params_file_name]
-    )
-    
-    default_bt_xml_file = PathJoinSubstitution(
-        # [FindPackageShare("whi_nav2_bringup"), "behavior_trees", "navigate_w_replanning_and_recovery_registration.xml"]
-        [FindPackageShare("whi_nav2_bringup"), "behavior_trees", "navigate_plain_with_spin2path.xml"]
-    )
+    nav2_params_file=os.path.join(get_package_share_directory('whi_nav2_bringup'),
+        'config', nav2_params_file_name)
 
     nav2_bringup_launch_file = PathJoinSubstitution([
         FindPackageShare('nav2_bringup'),
@@ -109,7 +106,9 @@ def launch_setup(context, *args, **kwargs):
             'map': map,
             'use_sim_time': use_sim_time,
             'params_file': nav2_params_file,
-            'default_bt_xml_filename': default_bt_xml_file}.items(),
+            'use_composition': 'False',
+            'use_respawn': 'False',
+        }.items(),
     )
 
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
