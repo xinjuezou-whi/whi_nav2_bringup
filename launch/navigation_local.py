@@ -62,8 +62,12 @@ def launch_setup(context, *args, **kwargs):
 
     if local_planner.lower() in ("dwb", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_dwb"
+    elif local_planner.lower() in ("mppi", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_mppi"
+    elif local_planner.lower() in ("rpp", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_rpp"
     else:
-        nav2_params_file_name = f"nav2_params"
+        nav2_params_file_name = f"nav2_params_dwb"
     if use_ekf.lower() in ("true", "1"): # in case it is a string
         nav2_params_file_name = nav2_params_file_name + f"_ekf_{vehicle}.yaml"
     else:
@@ -211,7 +215,7 @@ def generate_launch_description():
             'use_ekf', default_value='true',
             description='Use ekf to fuse localization'),
         DeclareLaunchArgument(
-            'local_planner', default_value='rpp',
+            'local_planner', default_value='dwb',
             description='The local planner to use'),
         DeclareLaunchArgument(
             'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
