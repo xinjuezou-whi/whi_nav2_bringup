@@ -131,14 +131,15 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[{'use_sim_time': use_sim_time}],
         arguments=['-configuration_directory', cartographer_config_dir,
-                   '-configuration_basename', cartographer_config_file],
+                   '-configuration_basename', cartographer_config_file,
+            ],
         remappings=remaps,
     )
     
     start_occupancy_grid_cmd = Node(
         package='cartographer_ros',
-        executable='occupancy_grid_node',
-        name='occupancy_grid_node',
+        executable='cartographer_occupancy_grid_node',
+        name='cartographer_occupancy_grid_node',
         output='screen',
         parameters=[{'use_sim_time': use_sim_time}],
         arguments=['-resolution', str(0.05), '-publish_period_sec', str(1.0)],
@@ -150,7 +151,7 @@ def launch_setup(context, *args, **kwargs):
         executable='map_saver_server',
         output='screen',
         parameters=[
-            {'save_map_timeout': 10},
+            {'save_map_timeout': 10.0},
             {'free_thresh_default': 0.25},
             {'occupied_thresh_default': 0.65}]
     )
