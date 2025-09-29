@@ -15,7 +15,7 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from launch.conditions import IfCondition, UnlessCondition
@@ -58,6 +58,7 @@ def launch_setup(context, *args, **kwargs):
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     use_3d = LaunchConfiguration("use_3d").perform(context)
+    use_multi = LaunchConfiguration("use_multi").perform(context)
 
     # Getting directories and launch-files
     whi_motion_hw_if_launch_file = PathJoinSubstitution([
@@ -84,6 +85,13 @@ def launch_setup(context, *args, **kwargs):
     cartographer_config_dir = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'config')
     if use_3d.lower() in ("true", "1"): # in case it is a string
         cartographer_config_file = "backpack_3d.lua"
+        rviz_config_file = PathJoinSubstitution(
+            [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping_3d.rviz"])
+        remaps=[('/points2', '/rslidar_points'),
+                ('/imu', '/imu_data'),
+                odom_remap]
+    elif use_multi.lower() in ("true", "1"): # in case it is a string:
+        cartographer_config_file = "backpack_2d_multi.lua"
         rviz_config_file = PathJoinSubstitution(
             [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping_3d.rviz"])
         remaps=[('/points2', '/rslidar_points'),
@@ -120,7 +128,12 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={
             'start_rviz': 'false',
         }.items(),
-        condition=IfCondition(LaunchConfiguration("use_3d"))
+        condition=IfCondition(
+            PythonExpression([
+                '"', LaunchConfiguration('use_3d'), '"', ' == "true" or ',
+                '"', LaunchConfiguration('use_multi'), '"', ' == "true"'
+            ])
+        )
     )
 
     # cartographer
@@ -205,5 +218,7 @@ def generate_launch_description():
             description='Use ekf to fuse localization'),
         DeclareLaunchArgument('use_3d', default_value='false',
             description='Use multi lidar for 3D mapping'),
+        DeclareLaunchArgument('use_multi', default_value='false',
+            description='Use multi lidar for 2D mapping'),
         OpaqueFunction(function=launch_setup)
     ])

@@ -59,6 +59,8 @@ def launch_setup(context, *args, **kwargs):
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     local_planner = LaunchConfiguration("local_planner").perform(context)
     map = LaunchConfiguration("map")
+    load_state_file = LaunchConfiguration("load_state_file")
+    use_3d = LaunchConfiguration("use_3d").perform(context)
 
     if local_planner.lower() in ("dwb", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_dwb"
@@ -76,7 +78,7 @@ def launch_setup(context, *args, **kwargs):
         'config', nav2_params_file_name)
 
     nav2_bringup_launch_file = PathJoinSubstitution([
-        FindPackageShare('nav2_bringup'),
+        FindPackageShare('whi_nav2_bringup'),
         'launch',
         'bringup_launch.py'
     ])
@@ -108,6 +110,8 @@ def launch_setup(context, *args, **kwargs):
         PythonLaunchDescriptionSource(nav2_bringup_launch_file),
         launch_arguments={
             'map': map,
+            'load_state_file': load_state_file,
+            'use_3d': use_3d,
             'use_sim_time': use_sim_time,
             'params_file': nav2_params_file,
             'use_composition': 'False',
@@ -190,7 +194,7 @@ def launch_setup(context, *args, **kwargs):
         start_life_cycle_nodes_cmd,
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
-        # start_rslidar_cmd,
+        start_rslidar_cmd,
         start_nav2_bringup_cmd,
         start_rviz_cmd
     ]
@@ -220,5 +224,11 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
             description='Full path to map file to load'),
+        DeclareLaunchArgument(
+            'load_state_file', default_value='/home/nvidia/ros2_ws/my_map.pbstream',
+            description='Full path to pbstream file to load'),
+        DeclareLaunchArgument(
+            'use_3d', default_value='false',
+            description='Use multi lidar for 3D localization'),
         OpaqueFunction(function=launch_setup)
     ])
