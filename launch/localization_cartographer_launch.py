@@ -33,6 +33,7 @@ def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
     map_yaml_file = LaunchConfiguration('map')
     load_state_file = LaunchConfiguration('load_state_file')
+    use_ekf = LaunchConfiguration("use_ekf")
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
     params_file = LaunchConfiguration('params_file')
@@ -83,6 +84,10 @@ def generate_launch_description():
     declare_state_file_cmd = DeclareLaunchArgument(
         'load_state_file',
         description='Full path to pbstream file to load')
+    
+    declare_use_ekf_cmd = DeclareLaunchArgument(
+        'use_ekf',
+        description='Use ekf to fuse localizationd')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -113,6 +118,10 @@ def generate_launch_description():
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info',
         description='log level')
+    
+    odom_topic = PythonExpression([
+        "'''/odometry/filtered''' if '", use_ekf, "' == 'true' else '''/odom'''"
+    ])
 
     load_nodes = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
@@ -131,7 +140,12 @@ def generate_launch_description():
             Node(
                 package = 'cartographer_ros',
                 executable = 'cartographer_node',
-                parameters = [{'use_sim_time': use_sim_time}],
+                parameters = [
+                    {
+                        'use_sim_time': use_sim_time,
+                        # 'use_pbstream': True,
+                    }
+                ],
                 arguments = [
                     '-configuration_directory', cartographer_config_dir,
                     '-configuration_basename', 'backpack_3d_localization.lua',
@@ -140,8 +154,8 @@ def generate_launch_description():
                     '-start_trajectory_with_default_topics=true'],
                 remappings = [
                     ('/points2', '/rslidar_points'),
-                    ('/odom', '/odometry/filtered'),
-                    ('/imu', '/imu_data')],
+                    ('/imu', '/imu_data'),
+                    ('/odom', odom_topic)],
                 output = 'screen'
             ),
 
@@ -196,6 +210,7 @@ def generate_launch_description():
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_state_file_cmd)
+    ld.add_action(declare_use_ekf_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)

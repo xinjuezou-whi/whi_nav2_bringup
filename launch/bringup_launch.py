@@ -38,7 +38,7 @@ def generate_launch_description():
     use_namespace = LaunchConfiguration('use_namespace')
     map_yaml_file = LaunchConfiguration('map')
     load_state_file = LaunchConfiguration('load_state_file')
-    use_3d = LaunchConfiguration('use_3d')
+    use_ekf = LaunchConfiguration("use_ekf")
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
     autostart = LaunchConfiguration('autostart')
@@ -98,9 +98,9 @@ def generate_launch_description():
         'load_state_file',
         description='Full path to pbstream file to load')
     
-    declare_use_3d_cmd = DeclareLaunchArgument(
-        'use_3d',
-        description='Use 3d to localization')
+    declare_use_ekf_cmd = DeclareLaunchArgument(
+        'use_ekf',
+        description='Use ekf to fuse localizationd')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -130,9 +130,9 @@ def generate_launch_description():
     
     localization_launch_file = PythonExpression([
         "'''", 
-        os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_cartographer_launch.py'),
-        "''' if '", use_3d, "' == 'true' else '''",
         os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'localization_launch.py'),
+        "''' if '", load_state_file, "' == '' else '''",
+        os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_cartographer_launch.py'),
         "'''"
     ])
 
@@ -157,6 +157,7 @@ def generate_launch_description():
             launch_arguments={'namespace': namespace,
                               'map': map_yaml_file,
                               'load_state_file': load_state_file,
+                              'use_ekf': use_ekf,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
@@ -186,7 +187,7 @@ def generate_launch_description():
     ld.add_action(declare_use_namespace_cmd)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_state_file_cmd)
-    ld.add_action(declare_use_3d_cmd)
+    ld.add_action(declare_use_ekf_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)

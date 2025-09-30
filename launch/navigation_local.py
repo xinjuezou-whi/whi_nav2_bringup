@@ -60,7 +60,6 @@ def launch_setup(context, *args, **kwargs):
     local_planner = LaunchConfiguration("local_planner").perform(context)
     map = LaunchConfiguration("map")
     load_state_file = LaunchConfiguration("load_state_file")
-    use_3d = LaunchConfiguration("use_3d").perform(context)
 
     if local_planner.lower() in ("dwb", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_dwb"
@@ -111,7 +110,7 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={
             'map': map,
             'load_state_file': load_state_file,
-            'use_3d': use_3d,
+            'use_ekf': use_ekf,
             'use_sim_time': use_sim_time,
             'params_file': nav2_params_file,
             'use_composition': 'False',
@@ -225,10 +224,7 @@ def generate_launch_description():
             'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
             description='Full path to map file to load'),
         DeclareLaunchArgument(
-            'load_state_file', default_value='/home/nvidia/ros2_ws/my_map.pbstream',
+            'load_state_file', default_value='',
             description='Full path to pbstream file to load'),
-        DeclareLaunchArgument(
-            'use_3d', default_value='false',
-            description='Use multi lidar for 3D localization'),
         OpaqueFunction(function=launch_setup)
     ])
