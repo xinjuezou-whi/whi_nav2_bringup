@@ -143,28 +143,20 @@ def generate_launch_description():
                 parameters = [
                     {
                         'use_sim_time': use_sim_time,
-                        # 'use_pbstream': True,
                     }
                 ],
                 arguments = [
                     '-configuration_directory', cartographer_config_dir,
                     '-configuration_basename', 'backpack_3d_localization.lua',
                     '-load_state_filename', load_state_file,
-                    '-load_frozen_state=false',
+                    '-load_frozen_state=true',
                     '-start_trajectory_with_default_topics=true'],
                 remappings = [
                     ('/points2', '/rslidar_points'),
                     ('/imu', '/imu_data'),
-                    ('/odom', odom_topic)],
+                    ('/odom', odom_topic),
+                ],
                 output = 'screen'
-            ),
-
-            Node(
-                package = 'cartographer_ros',
-                executable = 'cartographer_occupancy_grid_node',
-                parameters = [
-                    {'use_sim_time': use_sim_time},
-                    {'resolution': 0.05, 'publish_period_sec': 1.0}],
             ),
 
             Node(
