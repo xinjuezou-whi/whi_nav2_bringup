@@ -18,7 +18,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.actions import Node
@@ -32,8 +32,7 @@ def generate_launch_description():
 
     namespace = LaunchConfiguration('namespace')
     map_yaml_file = LaunchConfiguration('map')
-    load_state_file = LaunchConfiguration('load_state_file')
-    use_ekf = LaunchConfiguration("use_ekf")
+    icp_odom = LaunchConfiguration("icp_odom")
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
     params_file = LaunchConfiguration('params_file')
@@ -66,8 +65,6 @@ def generate_launch_description():
             param_rewrites=param_substitutions,
             convert_types=True),
         allow_substs=True)
-    
-    cartographer_config_dir = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'config')
 
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
@@ -81,13 +78,9 @@ def generate_launch_description():
         'map',
         description='Full path to map yaml file to load')
     
-    declare_state_file_cmd = DeclareLaunchArgument(
-        'load_state_file',
-        description='Full path to pbstream file to load')
-    
-    declare_use_ekf_cmd = DeclareLaunchArgument(
-        'use_ekf',
-        description='Use ekf to fuse localizationd')
+    declare_icp_odom_cmd = DeclareLaunchArgument(
+        'icp_odom', default_value='true',
+        description='whether to publish odom')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -118,10 +111,32 @@ def generate_launch_description():
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info',
         description='log level')
-    
-    odom_topic = PythonExpression([
-        "'''/odometry/filtered''' if '", use_ekf, "' == 'true' else '''/odom'''"
-    ])
+
+    parameters={
+        'frame_id':'base_link',
+        'use_sim_time':use_sim_time,
+        'subscribe_depth':False,
+        'subscribe_rgb':False,
+        'subscribe_scan_cloud':True,
+        'approx_sync':True,
+        'use_action_for_goal':True,
+        'Reg/Strategy':'1',
+        'Reg/Force3DoF':'false',
+        'RGBD/NeighborLinkRefining':'True',
+        'RGBD/ProximityPathMaxNeighbors':'1',
+        'Grid/Sensor':'0',
+        'Grid/RangeMin':'0.5', # ignore laser scan points on the robot itself
+        'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
+        # localization
+        'Mem/IncrementalMemory':'False',
+        'Mem/InitWMWithAllNodes':'True',
+    }
+    arguments = []
+    remappings=[
+        ('scan_cloud', '/rslidar_points'),
+    ]
+    if icp_odom:
+        remappings.append(('odom', 'icp_odom'))
 
     load_nodes = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
@@ -137,26 +152,24 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings),
 
+            # rtab map
+            # ICP odometry (optional)
             Node(
-                package = 'cartographer_ros',
-                executable = 'cartographer_node',
-                parameters = [
-                    {
-                        'use_sim_time': use_sim_time,
-                    }
+                condition=IfCondition(LaunchConfiguration('icp_odom')),
+                package='rtabmap_odom', executable='icp_odometry', output='screen',
+                parameters=[parameters, 
+                            {'odom_frame_id':'icp_odom',
+                            'guess_frame_id':'odom'}
                 ],
-                arguments = [
-                    '-configuration_directory', cartographer_config_dir,
-                    '-configuration_basename', 'backpack_3d_localization.lua',
-                    '-load_state_filename', load_state_file,
-                    '-load_frozen_state=true',
-                    '-start_trajectory_with_default_topics=true'],
-                remappings = [
-                    ('/points2', '/rslidar_points'),
-                    ('/imu', '/imu_data'),
-                    ('/odom', odom_topic),
-                ],
-                output = 'screen'
+                remappings=remappings
+            ),
+            
+            # SLAM:
+            Node(
+                package='rtabmap_slam', executable='rtabmap', output='screen',
+                parameters=[parameters],
+                remappings=remappings,
+                arguments=arguments
             ),
 
             Node(
@@ -167,7 +180,8 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[{'use_sim_time': use_sim_time},
                             {'autostart': autostart},
-                            {'node_names': lifecycle_nodes}])
+                            {'node_names': lifecycle_nodes}]
+            ),
         ]
     )
 
@@ -201,8 +215,7 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_map_yaml_cmd)
-    ld.add_action(declare_state_file_cmd)
-    ld.add_action(declare_use_ekf_cmd)
+    ld.add_action(declare_icp_odom_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)

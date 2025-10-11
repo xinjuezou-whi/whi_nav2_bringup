@@ -60,6 +60,7 @@ def launch_setup(context, *args, **kwargs):
     local_planner = LaunchConfiguration("local_planner").perform(context)
     map = LaunchConfiguration("map")
     load_state_file = LaunchConfiguration("load_state_file")
+    use_rtabmap = LaunchConfiguration("use_rtabmap")
 
     if local_planner.lower() in ("dwb", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_dwb"
@@ -110,6 +111,7 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={
             'map': map,
             'load_state_file': load_state_file,
+            'use_rtabmap': use_rtabmap,
             'use_ekf': use_ekf,
             'use_sim_time': use_sim_time,
             'params_file': nav2_params_file,
@@ -225,6 +227,9 @@ def generate_launch_description():
             description='Full path to map file to load'),
         DeclareLaunchArgument(
             'load_state_file', default_value='',
-            description='Full path to pbstream file to load'),
+            description='Full path to pbstream file to load will trigger cartographer localization'),
+        DeclareLaunchArgument(
+            'use_rtabmap', default_value='false',
+            description='Use rtabmap to localizing'),
         OpaqueFunction(function=launch_setup)
     ])

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Intel Corporation
+# Copyright 2025 WheelHub Intelligent
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ def generate_launch_description():
     use_namespace = LaunchConfiguration('use_namespace')
     map_yaml_file = LaunchConfiguration('map')
     load_state_file = LaunchConfiguration('load_state_file')
+    use_rtabmap = LaunchConfiguration('use_rtabmap')
     use_ekf = LaunchConfiguration("use_ekf")
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
@@ -98,6 +99,10 @@ def generate_launch_description():
         'load_state_file',
         description='Full path to pbstream file to load')
     
+    declare_use_rtabmap_cmd = DeclareLaunchArgument(
+        'use_rtabmap',
+        description='Use rtabmap to localizing')
+    
     declare_use_ekf_cmd = DeclareLaunchArgument(
         'use_ekf',
         description='Use ekf to fuse localizationd')
@@ -128,12 +133,13 @@ def generate_launch_description():
         'log_level', default_value='info',
         description='log level')
     
+    nav2_path = os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'localization_launch.py')
+    cartographer_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_cartographer_launch.py')
+    rtabmap_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_rtabmap_launch.py')
+    
     localization_launch_file = PythonExpression([
-        "'''", 
-        os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'localization_launch.py'),
-        "''' if '", load_state_file, "' == '' else '''",
-        os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_cartographer_launch.py'),
-        "'''"
+        '"', cartographer_path, '" if "', LaunchConfiguration('load_state_file'),
+        '" != "" else ( "', rtabmap_path, '" if "', LaunchConfiguration('use_rtabmap'), '" == "true" else "', nav2_path, '" )'
     ])
 
     # Specify the actions
@@ -187,6 +193,7 @@ def generate_launch_description():
     ld.add_action(declare_use_namespace_cmd)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_state_file_cmd)
+    ld.add_action(declare_use_rtabmap_cmd)
     ld.add_action(declare_use_ekf_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
