@@ -32,6 +32,7 @@ def generate_launch_description():
 
     namespace = LaunchConfiguration('namespace')
     map_yaml_file = LaunchConfiguration('map')
+    db_file = LaunchConfiguration('db_file')
     icp_odom = LaunchConfiguration("icp_odom")
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
@@ -77,10 +78,14 @@ def generate_launch_description():
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         description='Full path to map yaml file to load')
-    
+
+    declare_db_file_cmd = DeclareLaunchArgument(
+        'db_file', default_value='home/nvidia/.ros/rtabmap.db',
+        description='database file name')
+
     declare_icp_odom_cmd = DeclareLaunchArgument(
         'icp_odom', default_value='true',
-        description='whether to publish odom')
+        description='Whether to use icp odom')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -130,8 +135,9 @@ def generate_launch_description():
         # localization
         'Mem/IncrementalMemory':'False',
         'Mem/InitWMWithAllNodes':'True',
+        'Mem/STMSize':'0',  # disables short-term memory
+        'Mem/DatabaseAutoSave':'True',  # ensure database is flushed
     }
-    arguments = []
     remappings=[
         ('scan_cloud', '/rslidar_points'),
     ]
@@ -169,7 +175,10 @@ def generate_launch_description():
                 package='rtabmap_slam', executable='rtabmap', output='screen',
                 parameters=[parameters],
                 remappings=remappings,
-                arguments=arguments
+                arguments=[
+                    '-d', # This will delete the previous database (~/.ros/rtabmap.db)
+                    '--database_path', db_file,
+                ],
             ),
 
             Node(
@@ -215,6 +224,7 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_map_yaml_cmd)
+    ld.add_action(declare_db_file_cmd)
     ld.add_action(declare_icp_odom_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)

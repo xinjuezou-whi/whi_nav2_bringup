@@ -61,6 +61,7 @@ def launch_setup(context, *args, **kwargs):
     map = LaunchConfiguration("map")
     load_state_file = LaunchConfiguration("load_state_file")
     use_rtabmap = LaunchConfiguration("use_rtabmap")
+    db_file = LaunchConfiguration("db_file")
 
     if local_planner.lower() in ("dwb", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_dwb"
@@ -112,6 +113,7 @@ def launch_setup(context, *args, **kwargs):
             'map': map,
             'load_state_file': load_state_file,
             'use_rtabmap': use_rtabmap,
+            'db_file': db_file,
             'use_ekf': use_ekf,
             'use_sim_time': use_sim_time,
             'params_file': nav2_params_file,
@@ -231,5 +233,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'use_rtabmap', default_value='false',
             description='Use rtabmap to localizing'),
+        DeclareLaunchArgument(
+            'db_file', default_value='home/nvidia/.ros/rtabmap.db',
+            description='Full path to pbstream file to load will trigger cartographer localization'),
         OpaqueFunction(function=launch_setup)
     ])

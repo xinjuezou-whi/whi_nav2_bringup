@@ -39,6 +39,7 @@ def generate_launch_description():
     map_yaml_file = LaunchConfiguration('map')
     load_state_file = LaunchConfiguration('load_state_file')
     use_rtabmap = LaunchConfiguration('use_rtabmap')
+    db_file = LaunchConfiguration('db_file')
     use_ekf = LaunchConfiguration("use_ekf")
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
@@ -60,6 +61,8 @@ def generate_launch_description():
     param_substitutions = {
         'use_sim_time': use_sim_time,
         'yaml_filename': map_yaml_file}
+    if use_rtabmap:
+        param_substitutions['local_costmap.local_costmap.ros__parameters.global_frame'] = 'icp_odom'
 
     # Only it applys when `use_namespace` is True.
     # '<robot_namespace>' keyword shall be replaced by 'namespace' launch argument
@@ -102,6 +105,10 @@ def generate_launch_description():
     declare_use_rtabmap_cmd = DeclareLaunchArgument(
         'use_rtabmap',
         description='Use rtabmap to localizing')
+    
+    declare_db_file_cmd = DeclareLaunchArgument(
+        'db_file',
+        description='Full path to database file to load')
     
     declare_use_ekf_cmd = DeclareLaunchArgument(
         'use_ekf',
@@ -163,6 +170,7 @@ def generate_launch_description():
             launch_arguments={'namespace': namespace,
                               'map': map_yaml_file,
                               'load_state_file': load_state_file,
+                              'db_file': db_file,
                               'use_ekf': use_ekf,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
@@ -194,6 +202,7 @@ def generate_launch_description():
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_state_file_cmd)
     ld.add_action(declare_use_rtabmap_cmd)
+    ld.add_action(declare_db_file_cmd)
     ld.add_action(declare_use_ekf_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
