@@ -132,17 +132,21 @@ def generate_launch_description():
         'Grid/Sensor':'0',
         'Grid/RangeMin':'0.5', # ignore laser scan points on the robot itself
         'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
+        'Icp/VoxelSize': '0.1',
+        'Icp/PointToPlaneK': '20',
+        'Icp/PointToPlaneRadius': '0',
+        'Icp/PointToPlane': 'true',
+        'Icp/Iterations': '50',
+        'Icp/Epsilon': '0.001',
+        'Icp/MaxTranslation': '3',
+        'Icp/MaxCorrespondenceDistance': '3',
+        'Icp/Strategy': '1',
+        'Icp/OutlierRatio': '0.7',
+        'Icp/CorrespondenceRatio': '0.2',
         # localization
         'Mem/IncrementalMemory':'False',
         'Mem/InitWMWithAllNodes':'True',
-        'Mem/STMSize':'0',  # disables short-term memory
-        'Mem/DatabaseAutoSave':'True',  # ensure database is flushed
     }
-    remappings=[
-        ('scan_cloud', '/rslidar_points'),
-    ]
-    if icp_odom:
-        remappings.append(('odom', 'icp_odom'))
 
     load_nodes = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
@@ -156,7 +160,8 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings),
+                remappings=remappings
+            ),
 
             # rtab map
             # ICP odometry (optional)
@@ -164,17 +169,28 @@ def generate_launch_description():
                 condition=IfCondition(LaunchConfiguration('icp_odom')),
                 package='rtabmap_odom', executable='icp_odometry', output='screen',
                 parameters=[parameters, 
-                            {'odom_frame_id':'icp_odom',
-                            'guess_frame_id':'odom'}
+                            {
+                                # 'odom_frame_id':'icp_odom',
+                                # 'guess_frame_id':'odom',
+                                'odom_frame_id':'odom',
+                                "publish_tf": False,
+                            }
                 ],
-                remappings=remappings
+                remappings=[
+                    ('scan_cloud', '/rslidar_points'),
+                    ('odom', 'icp_odom'),
+                ],
             ),
             
             # SLAM:
             Node(
                 package='rtabmap_slam', executable='rtabmap', output='screen',
                 parameters=[parameters],
-                remappings=remappings,
+                remappings=[
+                    ('scan_cloud', '/rslidar_points'),
+                    # ('odom', 'icp_odom'),
+                    ('odom', '/odometry/filtered'),
+                ],
                 arguments=[
                     '-d', # This will delete the previous database (~/.ros/rtabmap.db)
                     '--database_path', db_file,
