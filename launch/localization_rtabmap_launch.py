@@ -192,7 +192,7 @@ def generate_launch_description():
                     ('odom', '/odometry/filtered'),
                 ],
                 arguments=[
-                    '-d', # This will delete the previous database (~/.ros/rtabmap.db)
+                    # '-d', # This will delete the previous database (~/.ros/rtabmap.db)
                     '--database_path', db_file,
                 ],
             ),
