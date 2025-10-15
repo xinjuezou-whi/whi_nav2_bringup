@@ -245,7 +245,8 @@ def launch_setup(context, *args, **kwargs):
             'Icp/CorrespondenceRatio': '0.2',
         }],
         remappings=[
-            ('scan_cloud', '/rslidar_points')
+            ('scan_cloud', '/rslidar_points'),
+            ('odom', '/odometry/filtered'),
         ],
         arguments=[
             '-d', # This will delete the previous database (~/.ros/rtabmap.db)
