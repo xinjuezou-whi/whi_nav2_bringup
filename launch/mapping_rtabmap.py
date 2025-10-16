@@ -154,8 +154,9 @@ def launch_setup(context, *args, **kwargs):
     if increamental.lower() in ("true", "1"): # in case it is a string
         arguments=[]
     else:
-        arguments=['-d', # This will delete the previous database (~/.ros/rtabmap.db)
-            ]
+        arguments=[
+            '-d', # This will delete the previous database (~/.ros/rtabmap.db)
+        ]
 
     start_rtabmap_odom_cmd = Node(
         package='rtabmap_odom', executable='icp_odometry', output='screen',
