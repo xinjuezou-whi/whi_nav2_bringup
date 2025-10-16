@@ -118,20 +118,25 @@ def generate_launch_description():
         description='log level')
 
     parameters={
-        'frame_id':'base_link',
-        'use_sim_time':use_sim_time,
-        'subscribe_depth':False,
-        'subscribe_rgb':False,
-        'subscribe_scan_cloud':True,
-        'approx_sync':True,
-        'use_action_for_goal':True,
-        'Reg/Strategy':'1',
-        'Reg/Force3DoF':'false',
-        'RGBD/NeighborLinkRefining':'True',
-        'RGBD/ProximityPathMaxNeighbors':'1',
-        'Grid/Sensor':'0',
-        'Grid/RangeMin':'0.5', # ignore laser scan points on the robot itself
-        'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
+        'frame_id': 'base_link',
+        'use_sim_time': use_sim_time,
+        'subscribe_depth': False,
+        'subscribe_rgb': False,
+        'subscribe_scan_cloud': True,
+        'approx_sync': True,
+        'use_action_for_goal': True,
+        'Reg/Strategy': '1',
+        'Reg/Force3DoF': 'false',
+        'RGBD/NeighborLinkRefining': 'True',
+        'RGBD/ProximityPathMaxNeighbors': '5',
+        'Grid/Sensor': '0',
+        'Grid/RayTracing': 'true',
+        'Grid/RayTracingRange': '6.0',
+        'Grid/RangeMin': '0.6', # ignore laser scan points on the robot itself
+        'Grid/RangeMax': '80.0',
+        'Grid/MaxGroundHeight': '0.2',
+        'Grid/MinGroundHeight': '-0.2',
+        'Grid/FlatObstacleDetected': 'true',
         'Icp/VoxelSize': '0.1',
         'Icp/PointToPlaneK': '20',
         'Icp/PointToPlaneRadius': '0',
@@ -139,13 +144,24 @@ def generate_launch_description():
         'Icp/Iterations': '50',
         'Icp/Epsilon': '0.001',
         'Icp/MaxTranslation': '3',
-        'Icp/MaxCorrespondenceDistance': '3',
+        'Icp/MaxCorrespondenceDistance': '1',
         'Icp/Strategy': '1',
         'Icp/OutlierRatio': '0.7',
         'Icp/CorrespondenceRatio': '0.2',
+        'Optimizer/Strategy': '2',             # 0 toro, 1 g2o, 2 gstam
+        'Optimizer/Robust': 'true',
+        'Optimizer/Iterations': '30',
+        'RGBD/OptimizeMaxError': '0',          # should be 0 if Optimizer/Robust is true
+        'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
+        'RGBD/ProximityBySpace': 'true',       # Local loop closure detection (using estimated position) with locations in WM
+        'RGBD/ProximityByTime': 'false',       # Local loop closure detection with locations in STM
+        'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
+        'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
+        'RGBD/ProximityOdomGuess': 'true',
+		'Optimizer/GravitySigma': '0', # Disable imu constraints (we are already in 2D)
         # localization
-        'Mem/IncrementalMemory':'False',
-        'Mem/InitWMWithAllNodes':'True',
+        'Mem/IncrementalMemory': 'False',
+        'Mem/InitWMWithAllNodes': 'True',
     }
 
     load_nodes = GroupAction(
@@ -193,7 +209,7 @@ def generate_launch_description():
                 ],
                 arguments=[
                     # '-d', # This will delete the previous database (~/.ros/rtabmap.db)
-                    '--database_path', db_file,
+                    # '--database_path', db_file,
                 ],
             ),
 
