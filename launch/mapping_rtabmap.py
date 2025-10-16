@@ -56,6 +56,7 @@ def launch_setup(context, *args, **kwargs):
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     icp_odom = LaunchConfiguration("icp_odom").perform(context)
+    increamental = LaunchConfiguration("increamental").perform(context)
 
     # Getting directories and launch-files
     whi_motion_hw_if_launch_file = PathJoinSubstitution([
@@ -144,6 +145,13 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
     }
+    
+    if increamental.lower() in ("true", "1"): # in case it is a string
+        arguments=[]
+    else:
+        arguments=['-d', # This will delete the previous database (~/.ros/rtabmap.db)
+            ]
+
     start_rtabmap_odom_cmd = Node(
         package='rtabmap_odom', executable='icp_odometry', output='screen',
         parameters=[
@@ -209,9 +217,7 @@ def launch_setup(context, *args, **kwargs):
         remappings=[
             ('scan_cloud', 'assembled_cloud'),
         ],
-        arguments=[
-            '-d', # This will delete the previous database (~/.ros/rtabmap.db)
-        ],
+        arguments=arguments,
         condition=IfCondition(LaunchConfiguration("icp_odom")),
     )
 
@@ -235,9 +241,7 @@ def launch_setup(context, *args, **kwargs):
             ('scan_cloud', '/rslidar_points'),
             ('odom', '/odometry/filtered'),
         ],
-        arguments=[
-            '-d', # This will delete the previous database (~/.ros/rtabmap.db)
-        ],
+        arguments=arguments,
         condition=UnlessCondition(LaunchConfiguration("icp_odom")),
     )
 
@@ -304,5 +308,7 @@ def generate_launch_description():
             description='Enable lidar deskewing'),
         DeclareLaunchArgument('icp_odom', default_value='true',
             description='whether to use icp odometry'),
+        DeclareLaunchArgument('increamental', default_value='false',
+            description='whether to map increamentally'),
         OpaqueFunction(function=launch_setup)
     ])
