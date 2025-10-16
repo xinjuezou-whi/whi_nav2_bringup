@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription, ExecuteProcess
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch.conditions import IfCondition, UnlessCondition
@@ -35,18 +35,6 @@ def is_process_running(name: str) -> bool:
         return False
 
 def launch_setup(context, *args, **kwargs):
-    unique_processes = [
-        "whi_rc_bridge_node",
-        "whi_indicators_node",
-        "whi_modbus_io_node",
-        "whi_imu_node",
-        "whi_battery_monitor_node",
-    ]
-    for exe in unique_processes:
-        if is_process_running(exe):
-            print(f"running process detected: {exe} is already running. Aborting launch.")
-            return []
-
     # Input parameters declaration
     # evaluate substitutions at runtime
     namespace = LaunchConfiguration('namespace')
@@ -57,6 +45,21 @@ def launch_setup(context, *args, **kwargs):
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     icp_odom = LaunchConfiguration("icp_odom").perform(context)
     increamental = LaunchConfiguration("increamental").perform(context)
+    bag_file = LaunchConfiguration("bag_file").perform(context)
+
+    # check running
+    if LaunchConfiguration('use_sim_time').perform(context).lower() in ("false", "1"): # in case it is a string
+        unique_processes = [
+            "whi_rc_bridge_node",
+            "whi_indicators_node",
+            "whi_modbus_io_node",
+            "whi_imu_node",
+            "whi_battery_monitor_node",
+        ]
+        for exe in unique_processes:
+            if is_process_running(exe):
+                print(f"running process detected: {exe} is already running. Aborting launch.")
+                return []
 
     # Getting directories and launch-files
     whi_motion_hw_if_launch_file = PathJoinSubstitution([
@@ -82,7 +85,8 @@ def launch_setup(context, *args, **kwargs):
             'vehicle_model': vehicle_model,
             'use_ekf': use_ekf,
             'enable_odom': enable_odom
-        }.items()
+        }.items(),
+        condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
 
     # LiDAR
@@ -90,7 +94,8 @@ def launch_setup(context, *args, **kwargs):
         PythonLaunchDescriptionSource(lidar_rslidar_launch_file),
         launch_arguments={
             'start_rviz': 'false',
-        }.items()
+        }.items(),
+        condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
 
     # rtab map
@@ -256,6 +261,7 @@ def launch_setup(context, *args, **kwargs):
             {'occupied_thresh_default': 0.65}]
     )
 
+    # life cycle
     lifecycle_nodes = ['map_saver']
     start_lifecycle_manager_cmd = Node(
         package='nav2_lifecycle_manager',
@@ -265,6 +271,13 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{'use_sim_time': use_sim_time},
                     {'autostart': autostart},
                     {'node_names': lifecycle_nodes}]
+    )
+
+    # bag play
+    start_play_rosbag_cmd = ExecuteProcess(
+        cmd=['ros2', 'bag', 'play', LaunchConfiguration('bag_file'), '--clock'],
+        condition=IfCondition(LaunchConfiguration("use_sim_time")),
+        output='screen',
     )
 
     # rviz visualization
@@ -284,6 +297,7 @@ def launch_setup(context, *args, **kwargs):
         start_rtabmap_slam_cmd,
         start_map_saver_server_cmd,
         start_lifecycle_manager_cmd,
+        start_play_rosbag_cmd,
         start_rviz_cmd
     ]
 
@@ -310,5 +324,7 @@ def generate_launch_description():
             description='whether to use icp odometry'),
         DeclareLaunchArgument('increamental', default_value='false',
             description='whether to map increamentally'),
+        DeclareLaunchArgument('bag_file', default_value='/home/nvidia/maps/offline',
+            description='Input bag file name'),
         OpaqueFunction(function=launch_setup)
     ])
