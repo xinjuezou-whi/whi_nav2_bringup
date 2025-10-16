@@ -74,7 +74,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Nodes launching commands
-    enable_odom = enable_odom = 'false' if icp_odom.lower() == 'true' else 'true'
+    enable_odom = 'false' if icp_odom.lower() == 'true' else 'true'
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={

@@ -81,7 +81,7 @@ def launch_setup(context, *args, **kwargs):
     nav2_bringup_launch_file = PathJoinSubstitution([
         FindPackageShare('whi_nav2_bringup'),
         'launch',
-        'bringup_launch.py'
+        'nav2_bringup.py'
     ])
 
     whi_motion_hw_if_launch_file = PathJoinSubstitution([
