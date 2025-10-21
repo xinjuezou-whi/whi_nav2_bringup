@@ -44,7 +44,7 @@ def launch_setup(context, *args, **kwargs):
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     icp_odom = LaunchConfiguration("icp_odom").perform(context)
-    increamental = LaunchConfiguration("increamental").perform(context)
+    incremental = LaunchConfiguration("incremental").perform(context)
     bag_file = LaunchConfiguration("bag_file").perform(context)
 
     # check running
@@ -151,7 +151,7 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/ProximityOdomGuess': 'true',
     }
     
-    if increamental.lower() in ("true", "1"): # in case it is a string
+    if incremental.lower() in ("true", "1"): # in case it is a string
         arguments=[]
     else:
         arguments=[
@@ -323,8 +323,8 @@ def generate_launch_description():
             description='Enable lidar deskewing'),
         DeclareLaunchArgument('icp_odom', default_value='true',
             description='whether to use icp odometry'),
-        DeclareLaunchArgument('increamental', default_value='false',
-            description='whether to map increamentally'),
+        DeclareLaunchArgument('incremental', default_value='false',
+            description='whether to map incrementally'),
         DeclareLaunchArgument('bag_file', default_value='/home/nvidia/maps/offline',
             description='Input bag file name'),
         OpaqueFunction(function=launch_setup)
