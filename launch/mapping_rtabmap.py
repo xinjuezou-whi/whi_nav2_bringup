@@ -46,6 +46,7 @@ def launch_setup(context, *args, **kwargs):
     icp_odom = LaunchConfiguration("icp_odom").perform(context)
     incremental = LaunchConfiguration("incremental").perform(context)
     bag_file = LaunchConfiguration("bag_file").perform(context)
+    landmark = LaunchConfiguration("landmark").perform(context)
 
     # check running
     if LaunchConfiguration('use_sim_time').perform(context).lower() in ("false", "1"): # in case it is a string
@@ -72,6 +73,16 @@ def launch_setup(context, *args, **kwargs):
         'launch',
         'start.py'
     ])
+    whi_qrcode_pose_launch_file = PathJoinSubstitution([
+        FindPackageShare('whi_qrcode_pose'),
+        'launch',
+        'launch.py'
+    ])
+    whi_landmark_launch_file = PathJoinSubstitution([
+        FindPackageShare('whi_land_marker'),
+        'launch',
+        'launch.py'
+    ])
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping_3d.rviz"]
     )
@@ -96,6 +107,17 @@ def launch_setup(context, *args, **kwargs):
             'start_rviz': 'false',
         }.items(),
         condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
+    )
+
+    # landmark utility
+    start_whi_qrcode_pose_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(whi_qrcode_pose_launch_file),
+        condition=IfCondition(LaunchConfiguration("landmark")),
+    )
+
+    start_whi_landmark_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(whi_landmark_launch_file),
+        condition=IfCondition(LaunchConfiguration("landmark")),
     )
 
     # rtab map
@@ -149,7 +171,16 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
         'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
+        #####################################
+        # 'Mem/LandmarkDetection': 'true',
+        # 'RGBD/ProximityByLandmarks': 'true',
+        # 'RGBD/OptimizeFromGraphEnd': 'false',
     }
+
+    if landmark.lower() in ("true", "1"): # in case it is a string
+        parameters['Mem/LandmarkDetection'] = 'true'
+        parameters['RGBD/ProximityByLandmarks'] = 'true'
+        parameters['RGBD/OptimizeFromGraphEnd'] = 'false'
     
     if incremental.lower() in ("true", "1"): # in case it is a string
         arguments=[]
@@ -292,6 +323,8 @@ def launch_setup(context, *args, **kwargs):
     launch_nodes = [
         start_whi_motion_hw_if_cmd,
         start_rslidar_cmd,
+        start_whi_qrcode_pose_cmd,
+        start_whi_landmark_cmd,
         start_rtabmap_odom_cmd,
         start_rtabmap_util_cmd,
         start_rtabmap_slam_ipc_cmd,
@@ -308,24 +341,26 @@ def generate_launch_description():
     return LaunchDescription([
         # Declare the launch arguments
         DeclareLaunchArgument('namespace', default_value='',
-            description='Top-level namespace'),
+            description='top-level namespace'),
         DeclareLaunchArgument('use_sim_time', default_value='false',
-            description='Use simulation (Gazebo) clock if true'),
+            description='use simulation (Gazebo) clock if true'),
         DeclareLaunchArgument('autostart', default_value='true',
-            description='Automatically startup the nav2 stack'),
+            description='automatically startup the nav2 stack'),
         DeclareLaunchArgument("vehicle", default_value="L1",
             description="the mobile robot series"),
         DeclareLaunchArgument("vehicle_model", default_value="diff",
             description="the mobile robot's dynamic model"),
         DeclareLaunchArgument('use_ekf', default_value='true',
-            description='Use ekf to fuse localization'),
+            description='use ekf to fuse localization'),
         DeclareLaunchArgument('deskewing', default_value='false',
-            description='Enable lidar deskewing'),
+            description='enable lidar deskewing'),
         DeclareLaunchArgument('icp_odom', default_value='true',
             description='whether to use icp odometry'),
         DeclareLaunchArgument('incremental', default_value='false',
             description='whether to map incrementally'),
         DeclareLaunchArgument('bag_file', default_value='/home/nvidia/maps/offline',
-            description='Input bag file name'),
+            description='input bag file name'),
+        DeclareLaunchArgument('landmark', default_value='false',
+            description='wether to use landmark'),
         OpaqueFunction(function=launch_setup)
     ])
