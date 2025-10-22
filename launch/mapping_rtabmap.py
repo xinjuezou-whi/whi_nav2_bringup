@@ -171,10 +171,6 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
         'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
-        #####################################
-        # 'Mem/LandmarkDetection': 'true',
-        # 'RGBD/ProximityByLandmarks': 'true',
-        # 'RGBD/OptimizeFromGraphEnd': 'false',
     }
 
     if landmark.lower() in ("true", "1"): # in case it is a string
