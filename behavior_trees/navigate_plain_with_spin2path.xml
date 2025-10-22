@@ -8,7 +8,6 @@
 			<RecoveryNode number_of_retries="1" name="SpinAlignmentRecovery">
 				<SpinToPath path="{path}" lookahead_distance="0.3"/>
 				<ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-				<!-- <Wait wait_duration="0.2"/> -->
 			</RecoveryNode>
 
 			<!-- Step 3: Start continuous replanning + execution -->
