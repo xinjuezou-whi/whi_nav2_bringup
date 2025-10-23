@@ -112,12 +112,22 @@ def launch_setup(context, *args, **kwargs):
     # landmark utility
     start_whi_qrcode_pose_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_qrcode_pose_launch_file),
-        condition=IfCondition(LaunchConfiguration("landmark")),
+        condition=IfCondition(
+            PythonExpression([
+                '"', LaunchConfiguration('landmark'), '"', ' == "true" and ',
+                '"', LaunchConfiguration('use_sim_time'), '"', ' == "false"'
+            ])
+        )
     )
 
     start_whi_landmark_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_landmark_launch_file),
-        condition=IfCondition(LaunchConfiguration("landmark")),
+        condition=IfCondition(
+            PythonExpression([
+                '"', LaunchConfiguration('landmark'), '"', ' == "true" and ',
+                '"', LaunchConfiguration('use_sim_time'), '"', ' == "false"'
+            ])
+        )
     )
 
     # rtab map
@@ -257,6 +267,7 @@ def launch_setup(context, *args, **kwargs):
     start_rtabmap_slam_cmd = Node(
         package='rtabmap_slam', executable='rtabmap', output='screen',
         parameters=[
+            parameters,
             {
                 'frame_id': 'base_link',
                 'odom_frame_id': 'odom',
@@ -267,8 +278,8 @@ def launch_setup(context, *args, **kwargs):
                 'wait_for_transform': 0.25,
                 'queue_size': 50, # increase from default 10
                 'use_sim_time': use_sim_time,
+                'Grid/MinClusterSize': '10',
             },
-            parameters,
         ],
         remappings=[
             ('scan_cloud', '/rslidar_points'),
