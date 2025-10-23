@@ -110,7 +110,8 @@ def launch_setup(context, *args, **kwargs):
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
             'use_ekf': use_ekf
-        }.items()
+        }.items(),
+        condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
 
     # LiDAR
@@ -120,7 +121,12 @@ def launch_setup(context, *args, **kwargs):
             'frame_id': 'laser',
             'output_topic0': 'scan',
         }.items(),
-        condition=UnlessCondition(LaunchConfiguration("use_3d"))
+        condition=IfCondition(
+            PythonExpression([
+                '"', LaunchConfiguration('use_3d'), '"', ' == "false" and ',
+                '"', LaunchConfiguration('use_sim_time'), '"', ' == "false"'
+            ])
+        )
     )
 
     start_rslidar_cmd = IncludeLaunchDescription(
@@ -130,8 +136,13 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
         condition=IfCondition(
             PythonExpression([
-                '"', LaunchConfiguration('use_3d'), '"', ' == "true" or ',
-                '"', LaunchConfiguration('use_multi'), '"', ' == "true"'
+                '(',
+                    '"', LaunchConfiguration('use_3d'), '"', ' == "true"',
+                    ' or ',
+                    '"', LaunchConfiguration('use_multi'), '"', ' == "true"',
+                ')',
+                ' and ',
+                '"', LaunchConfiguration('use_sim_time'), '"', ' == "false"'
             ])
         )
     )

@@ -16,6 +16,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription, ExecuteProcess
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.substitutions import FindPackageShare
 import subprocess
 
@@ -52,6 +53,7 @@ def launch_setup(context, *args, **kwargs):
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     bag_file = LaunchConfiguration("bag_file").perform(context)
+    landmark = LaunchConfiguration("landmark").perform(context)
 
     whi_motion_hw_if_launch_file = PathJoinSubstitution([
         FindPackageShare('whi_motion_hw_interface'),
@@ -69,6 +71,18 @@ def launch_setup(context, *args, **kwargs):
         FindPackageShare('rslidar_sdk'),
         'launch',
         'start.py'
+    ])
+
+    whi_qrcode_pose_launch_file = PathJoinSubstitution([
+        FindPackageShare('whi_qrcode_pose'),
+        'launch',
+        'launch.py'
+    ])
+
+    whi_landmark_launch_file = PathJoinSubstitution([
+        FindPackageShare('whi_land_marker'),
+        'launch',
+        'launch.py'
     ])
 
     # Nodes launching commands
@@ -98,6 +112,17 @@ def launch_setup(context, *args, **kwargs):
         }.items()
     )
 
+    # landmark utility
+    start_whi_qrcode_pose_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(whi_qrcode_pose_launch_file),
+        condition=IfCondition(LaunchConfiguration("landmark")),
+    )
+
+    start_whi_landmark_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(whi_landmark_launch_file),
+        condition=IfCondition(LaunchConfiguration("landmark")),
+    )
+
     # bag record
     start_rosbag_record_cmd = ExecuteProcess(
         cmd=['ros2', 'bag', 'record', '-a', '-o', LaunchConfiguration('bag_file')],
@@ -108,7 +133,9 @@ def launch_setup(context, *args, **kwargs):
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
         start_rslidar_cmd,
-        start_rosbag_record_cmd,
+        start_whi_qrcode_pose_cmd,
+        start_whi_landmark_cmd,
+        # start_rosbag_record_cmd,
     ]
 
     return launch_nodes
@@ -130,5 +157,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'bag_file', default_value='/home/nvidia/maps/offline',
             description='Output bag file name'),
+        DeclareLaunchArgument('landmark', default_value='false',
+            description='wether to use landmark'),
         OpaqueFunction(function=launch_setup)
     ])
