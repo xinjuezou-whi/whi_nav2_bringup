@@ -121,6 +121,7 @@ def generate_launch_description():
         'use_sim_time': use_sim_time,
         'subscribe_depth': False,
         'subscribe_rgb': False,
+        'subscribe_scan': False,
         'subscribe_scan_cloud': True,
         'approx_sync': True,
         'use_action_for_goal': True,

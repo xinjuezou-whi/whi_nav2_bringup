@@ -132,44 +132,50 @@ def launch_setup(context, *args, **kwargs):
 
     # rtab map
     parameters_odom={
-        'Odom/Strategy': '1',
+        'Odom/Strategy': '1',                 # 0 Visual, 1 ICP, 2 Visual + ICP
         'Odom/ScanKeyFrameThr': '0.4',
+        'Odom/Force3DoF': 'true',
         'OdomF2M/ScanSubtractRadius': '0.1',
         'OdomF2M/ScanMaxSize': '15000',
         'OdomF2M/BundleAdjustment': 'false',
     }
     parameters={
-        'Grid/Sensor': '0',
+        'subscribe_depth': False,
+        'subscribe_rgb': False,
+        'subscribe_scan': False,
+        'subscribe_scan_cloud': True,
+        'approx_sync': True,
+        'Grid/Sensor': '0',                    # 0 LiDAR or RGB-D, 1 2D LiDAR, 3 Stereo
         'Grid/3D': 'false',
         'Grid/CellSize': '0.1',
         'Grid/RayTracing': 'true',
-        'Grid/RayTracingRange': '6.0',
+        'Grid/RayTracingRange': '10.0',
         'Grid/ClusterRadius': '0.1',
         'Grid/MinClusterSize': '20',
         'Grid/ScanVoxelSize': '0.1',
-        'Grid/RangeMin': '0.6',
-        'Grid/RangeMax': '80.0',
-        'Grid/MaxGroundHeight': '0.2',
+        'Grid/RangeMin': '0.5',
+        'Grid/RangeMax': '60.0',
+        'Grid/MaxGroundHeight': '0.1',
         'Grid/MinGroundHeight': '-0.2',
         'Grid/FlatObstacleDetected': 'true',
         'RGBD/AngularUpdate': '0.05',
         'RGBD/LinearUpdate': '0.05',
-        'RGBD/CreateOccupancyGrid': 'false',
+        'RGBD/CreateOccupancyGrid': 'true',
         'Mem/NotLinkedNodesKept': 'false',
         'Mem/STMSize': '30',
         'Mem/LaserScanNormalK': '20',
-        'Reg/Strategy': '1',
+        'Reg/Strategy': '1',                   # 0 Visual(RGB cam), 1 ICP, 2 Visual + ICP(RGBD cam)
         'Reg/Force3DoF': 'true',
         'Icp/VoxelSize': '0.1',
-        'Icp/PointToPlaneK': '20',
+        'Icp/PointToPlaneK': '30',
         'Icp/PointToPlaneRadius': '0',
         'Icp/PointToPlane': 'true',
-        'Icp/Iterations': '50',
+        'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
-        'Icp/MaxTranslation': '3',
-        'Icp/MaxCorrespondenceDistance': '1',
-        'Icp/Strategy': '1',
-        'Icp/OutlierRatio': '0.7',
+        'Icp/MaxTranslation': '2',
+        'Icp/MaxCorrespondenceDistance': '0.8',
+        'Icp/Strategy': '1',                   # 0 point to point, 1 point to plane, 2 both
+        'Icp/OutlierRatio': '0.8',
         'Icp/CorrespondenceRatio': '0.2',
         'Optimizer/Strategy': '2',             # 0 toro, 1 g2o, 2 gstam
         'Optimizer/Robust': 'true',
@@ -201,10 +207,6 @@ def launch_setup(context, *args, **kwargs):
             {
                 # 'frame_id': 'laser_multi', # align with rslidar's config
                 'frame_id': 'base_link',
-                'subscribe_depth': False,
-                'subscribe_rgb': False,
-                'subscribe_scan': False,
-                'subscribe_scan_cloud': True,
                 'odom_frame_id':'icp_odom',
                 'guess_frame_id':'odom',
                 "publish_tf": True,
@@ -228,7 +230,7 @@ def launch_setup(context, *args, **kwargs):
         package='rtabmap_util', executable='point_cloud_assembler', output='screen',
         parameters=[
             {
-                'max_clouds': 10,
+                'max_clouds': 20,
                 'fixed_frame_id': '',
                 'use_sim_time': use_sim_time,
                 'sync_queue_size': 30,
@@ -241,18 +243,13 @@ def launch_setup(context, *args, **kwargs):
         condition=IfCondition(LaunchConfiguration("icp_odom")),
     )
 
-    start_rtabmap_slam_ipc_cmd = Node(
+    start_rtabmap_slam_icp_cmd = Node(
         package='rtabmap_slam', executable='rtabmap', output='screen',
         parameters=[
             {
                 # 'frame_id': 'laser_multi', # align with rslidar's config
                 'frame_id': 'base_link',
-                'subscribe_depth': False,
-                'subscribe_rgb': False,
-                'subscribe_scan': False,
-                'subscribe_scan_cloud': True,
-                'approx_sync': True,
-                'wait_for_transform': 0.2,
+                'wait_for_transform': 0.25,
                 'use_sim_time': use_sim_time,
             },
             parameters,
@@ -271,10 +268,6 @@ def launch_setup(context, *args, **kwargs):
             {
                 'frame_id': 'base_link',
                 'odom_frame_id': 'odom',
-                'subscribe_depth': False,
-                'subscribe_rgb': False,
-                'subscribe_scan_cloud': True,
-                'approx_sync': True,
                 'wait_for_transform': 0.25,
                 'queue_size': 50, # increase from default 10
                 'use_sim_time': use_sim_time,
@@ -334,7 +327,7 @@ def launch_setup(context, *args, **kwargs):
         start_whi_landmark_cmd,
         start_rtabmap_odom_cmd,
         start_rtabmap_util_cmd,
-        start_rtabmap_slam_ipc_cmd,
+        start_rtabmap_slam_icp_cmd,
         start_rtabmap_slam_cmd,
         start_map_saver_server_cmd,
         start_lifecycle_manager_cmd,
