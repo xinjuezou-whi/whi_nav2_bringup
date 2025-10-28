@@ -125,32 +125,32 @@ def generate_launch_description():
         'subscribe_scan_cloud': True,
         'approx_sync': True,
         'use_action_for_goal': True,
-        'Reg/Strategy': '1',
+        'Reg/Strategy': '1',                    # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'false',
         'RGBD/NeighborLinkRefining': 'True',
-        'RGBD/ProximityPathMaxNeighbors': '5',
+        'RGBD/ProximityPathMaxNeighbors': '10',
         'Grid/Sensor': '0',
         'Grid/RayTracing': 'true',
-        'Grid/RayTracingRange': '6.0',
-        'Grid/RangeMin': '0.6', # ignore laser scan points on the robot itself
-        'Grid/RangeMax': '80.0',
-        'Grid/MaxGroundHeight': '0.2',
+        'Grid/RangeMin': '0.5', # ignore laser scan points on the robot itself
+        'Grid/RangeMax': '60.0',
+        'Grid/MaxGroundHeight': '0.05',
         'Grid/MinGroundHeight': '-0.2',
         'Grid/FlatObstacleDetected': 'true',
         'Icp/VoxelSize': '0.1',
-        'Icp/PointToPlaneK': '20',
-        'Icp/PointToPlaneRadius': '0',
+        'Icp/PointToPlaneK': '0',
+        'Icp/PointToPlaneRadius': '0.5',
         'Icp/PointToPlane': 'true',
-        'Icp/Iterations': '50',
+        'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
-        'Icp/MaxTranslation': '3',
-        'Icp/MaxCorrespondenceDistance': '1',
-        'Icp/Strategy': '1',
-        'Icp/OutlierRatio': '0.7',
+        'Icp/MaxTranslation': '2',
+        'Icp/MaxCorrespondenceDistance': '0.5',
+        'Icp/Strategy': '1',                    # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
+        'Icp/OutlierRatio': '0.8',
         'Icp/CorrespondenceRatio': '0.2',
-        'Optimizer/Strategy': '2',             # 0 toro, 1 g2o, 2 gstam
+        'Optimizer/Strategy': '3',              # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
         'Optimizer/Robust': 'true',
         'Optimizer/Iterations': '30',
+        'Optimizer/GravitySigma': '0',         # Disable imu constraints (we are already in 2D)
         'RGBD/OptimizeMaxError': '0',          # should be 0 if Optimizer/Robust is true
         'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
         'RGBD/ProximityBySpace': 'true',       # Local loop closure detection (using estimated position) with locations in WM
@@ -158,7 +158,6 @@ def generate_launch_description():
         'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
         'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
-		'Optimizer/GravitySigma': '0', # Disable imu constraints (we are already in 2D)
         # localization
         'Mem/IncrementalMemory': 'False',
         'Mem/InitWMWithAllNodes': 'True',
@@ -236,7 +235,7 @@ def generate_launch_description():
                 name='map_server',
                 parameters=[configured_params],
                 remappings=remappings),
-            # TODO::plugin of cartographer
+            # TODO::plugins
             ComposableNode(
                 package='nav2_lifecycle_manager',
                 plugin='nav2_lifecycle_manager::LifecycleManager',
