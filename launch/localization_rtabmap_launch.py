@@ -130,7 +130,7 @@ def generate_launch_description():
         'RGBD/NeighborLinkRefining': 'True',
         'RGBD/ProximityPathMaxNeighbors': '10',
         'Grid/Sensor': '0',
-        'Grid/RayTracing': 'true',
+        'Grid/RayTracing': 'false',
         'Grid/RangeMin': '0.5', # ignore laser scan points on the robot itself
         'Grid/RangeMax': '60.0',
         'Grid/MaxGroundHeight': '0.05',
