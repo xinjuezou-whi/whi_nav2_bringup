@@ -47,6 +47,7 @@ def launch_setup(context, *args, **kwargs):
     incremental = LaunchConfiguration("incremental").perform(context)
     bag_file = LaunchConfiguration("bag_file").perform(context)
     landmark = LaunchConfiguration("landmark").perform(context)
+    rgb = LaunchConfiguration("rgb").perform(context)
 
     # check running
     if LaunchConfiguration('use_sim_time').perform(context).lower() in ("false", "1"): # in case it is a string
@@ -109,6 +110,18 @@ def launch_setup(context, *args, **kwargs):
         condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
 
+    # RGB camera
+    start_usb_cam_cam =  Node(
+        package='usb_cam',
+        executable='usb_cam_node_exe',
+        name='usb_cam',
+        output='screen',
+        parameters=[
+            '/home/nvidia/ros2_humble/src/usb_cam/config/params_hik.yaml'
+        ],
+        condition=IfCondition(LaunchConfiguration("rgb")),
+    )
+
     # landmark utility
     start_whi_qrcode_pose_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_qrcode_pose_launch_file),
@@ -132,12 +145,13 @@ def launch_setup(context, *args, **kwargs):
 
     # rtab map
     parameters_odom={
-        'Odom/Strategy': '1',                 # 0 Visual, 1 ICP, 2 Visual + ICP
+        'Odom/Strategy': '0',                  # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D
+        'Odom/GuessMotion': 'true',
         'Odom/ScanKeyFrameThr': '0.4',
         'Odom/Force3DoF': 'true',
-        'OdomF2M/ScanSubtractRadius': '0.1',
+        'OdomF2M/ScanSubtractRadius': '0.1',   # Radius used to filter points of a new added scan to local map. This could match the voxel size of the scans
         'OdomF2M/ScanMaxSize': '15000',
-        'OdomF2M/BundleAdjustment': 'false',
+        'OdomF2M/BundleAdjustment': '3',       # Local bundle adjustment: 0=disabled, 1=g2o, 2=cvsba, 3=Ceres
     }
     parameters={
         'subscribe_depth': False,
@@ -145,41 +159,45 @@ def launch_setup(context, *args, **kwargs):
         'subscribe_scan': False,
         'subscribe_scan_cloud': True,
         'approx_sync': True,
-        'Grid/Sensor': '0',                    # 0 LiDAR or RGB-D, 1 2D LiDAR, 3 Stereo
+        'Grid/Sensor': '0',                    # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
         'Grid/3D': 'false',
         'Grid/CellSize': '0.1',
         'Grid/RayTracing': 'true',
-        'Grid/RayTracingRange': '10.0',
         'Grid/ClusterRadius': '0.1',
-        'Grid/MinClusterSize': '20',
-        'Grid/ScanVoxelSize': '0.1',
+        'Grid/MinClusterSize': '10',
         'Grid/RangeMin': '0.5',
         'Grid/RangeMax': '60.0',
-        'Grid/MaxGroundHeight': '0.1',
+        'Grid/MaxGroundHeight': '0.05',
         'Grid/MinGroundHeight': '-0.2',
         'Grid/FlatObstacleDetected': 'true',
         'RGBD/AngularUpdate': '0.05',
         'RGBD/LinearUpdate': '0.05',
         'RGBD/CreateOccupancyGrid': 'true',
         'Mem/NotLinkedNodesKept': 'false',
-        'Mem/STMSize': '30',
-        'Mem/LaserScanNormalK': '20',
-        'Reg/Strategy': '1',                   # 0 Visual(RGB cam), 1 ICP, 2 Visual + ICP(RGBD cam)
+        'Mem/STMSize': '15',
+        'Mem/LaserScanNormalK': '0',
+        'Mem/LaserScanNormalRadius': '0.5',
+        'Mem/LaserScanVoxelSize': '0.1',
+        'Mem/ReduceGraph': 'true',             # to suppress the size of db
+        'Mem/BinDataKept': 'false',            # to suppress the size of db
+        'Reg/Strategy': '1',                   # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'true',
         'Icp/VoxelSize': '0.1',
-        'Icp/PointToPlaneK': '30',
-        'Icp/PointToPlaneRadius': '0',
+        'Icp/PointToPlaneK': '0',
+        'Icp/PointToPlaneRadius': '0.5',
         'Icp/PointToPlane': 'true',
         'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
         'Icp/MaxTranslation': '2',
-        'Icp/MaxCorrespondenceDistance': '0.8',
-        'Icp/Strategy': '1',                   # 0 point to point, 1 point to plane, 2 both
+        'Icp/MaxCorrespondenceDistance': '0.5',
+        'Icp/Strategy': '1',                   # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
         'Icp/OutlierRatio': '0.8',
         'Icp/CorrespondenceRatio': '0.2',
-        'Optimizer/Strategy': '2',             # 0 toro, 1 g2o, 2 gstam
+        'Optimizer/Strategy': '3',             # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
         'Optimizer/Robust': 'true',
-        'Optimizer/Iterations': '30',
+        'Optimizer/Iterations': '20',
+        'Optimizer/GravitySigma': '0',         # Disable imu constraints (we are already in 2D)
+        'RGBD/OptimizeFromGraphEnd': 'false',
         'RGBD/OptimizeMaxError': '0',          # should be 0 if Optimizer/Robust is true
         'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
         'RGBD/ProximityBySpace': 'true',       # Local loop closure detection (using estimated position) with locations in WM
@@ -187,12 +205,30 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
         'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
+        'RGBD/Enabled': 'true',                # for visual, along with subscribe_rgb=true
+        'Vis/MinInliers':'20',                 # for visual
+        'Vis/MaxFeatures':'1000',              # for visual
+        'Vis/SSC': 'true',                     # TODO
+        'Kp/MaxFeatures': '500',               # for visual, Maximum features extracted from the images (0 means not bounded, <0 means no extraction)
+        'Kp/SSC': 'true',                      # TODO
+        # 'Kp/IncrementalDictionary': 'false',
+        # 'Kp/DictionaryPath': '/home/nvidia/.ros/dict.db',
     }
 
-    if landmark.lower() in ("true", "1"): # in case it is a string
-        parameters['Mem/LandmarkDetection'] = 'true'
-        parameters['RGBD/ProximityByLandmarks'] = 'true'
-        parameters['RGBD/OptimizeFromGraphEnd'] = 'false'
+    if icp_odom.lower() in ("true", "1"): # in case it is a string
+        parameters['Icp/Strategy'] = '1'
+
+    remappings_robot_odom = [
+        ('scan_cloud', '/rslidar_points'),
+        ('odom', '/odometry/filtered'),
+    ]
+    if rgb.lower() in ("true", "1"): # in case it is a string
+        parameters['subscribe_rgb'] = True
+        parameters['Reg/Strategy'] = '2'
+        remappings_robot_odom.extend([
+            ('rgb/camera_info', '/camera_info'),
+            ('rgb/image', '/image_raw'),
+        ])
     
     if incremental.lower() in ("true", "1"): # in case it is a string
         arguments=[]
@@ -204,8 +240,9 @@ def launch_setup(context, *args, **kwargs):
     start_rtabmap_odom_cmd = Node(
         package='rtabmap_odom', executable='icp_odometry', output='screen',
         parameters=[
+            parameters_odom,
+            parameters,
             {
-                # 'frame_id': 'laser_multi', # align with rslidar's config
                 'frame_id': 'base_link',
                 'odom_frame_id':'icp_odom',
                 'guess_frame_id':'odom',
@@ -217,8 +254,6 @@ def launch_setup(context, *args, **kwargs):
                 'sync_queue_size': 30,
                 'topic_queue_size': 30,
             },
-            parameters_odom,
-            parameters,
         ],
         remappings=[
             ('scan_cloud', '/rslidar_points'),
@@ -247,7 +282,6 @@ def launch_setup(context, *args, **kwargs):
         package='rtabmap_slam', executable='rtabmap', output='screen',
         parameters=[
             {
-                # 'frame_id': 'laser_multi', # align with rslidar's config
                 'frame_id': 'base_link',
                 'wait_for_transform': 0.25,
                 'use_sim_time': use_sim_time,
@@ -271,13 +305,9 @@ def launch_setup(context, *args, **kwargs):
                 'wait_for_transform': 0.25,
                 'queue_size': 50, # increase from default 10
                 'use_sim_time': use_sim_time,
-                'Grid/MinClusterSize': '10',
             },
         ],
-        remappings=[
-            ('scan_cloud', '/rslidar_points'),
-            ('odom', '/odometry/filtered'),
-        ],
+        remappings=remappings_robot_odom,
         arguments=arguments,
         condition=UnlessCondition(LaunchConfiguration("icp_odom")),
     )
@@ -323,6 +353,7 @@ def launch_setup(context, *args, **kwargs):
     launch_nodes = [
         start_whi_motion_hw_if_cmd,
         start_rslidar_cmd,
+        start_usb_cam_cam,
         start_whi_qrcode_pose_cmd,
         start_whi_landmark_cmd,
         start_rtabmap_odom_cmd,
@@ -354,7 +385,7 @@ def generate_launch_description():
             description='use ekf to fuse localization'),
         DeclareLaunchArgument('deskewing', default_value='false',
             description='enable lidar deskewing'),
-        DeclareLaunchArgument('icp_odom', default_value='true',
+        DeclareLaunchArgument('icp_odom', default_value='false',
             description='whether to use icp odometry'),
         DeclareLaunchArgument('incremental', default_value='false',
             description='whether to map incrementally'),
@@ -362,5 +393,7 @@ def generate_launch_description():
             description='input bag file name'),
         DeclareLaunchArgument('landmark', default_value='false',
             description='wether to use landmark'),
+        DeclareLaunchArgument('rgb', default_value='false',
+            description='wether to use rgb camera for global closure loop'),
         OpaqueFunction(function=launch_setup)
     ])
