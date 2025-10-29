@@ -170,9 +170,6 @@ def launch_setup(context, *args, **kwargs):
         'Grid/MaxGroundHeight': '0.05',
         'Grid/MinGroundHeight': '-0.2',
         'Grid/FlatObstacleDetected': 'true',
-        'RGBD/AngularUpdate': '0.05',
-        'RGBD/LinearUpdate': '0.05',
-        'RGBD/CreateOccupancyGrid': 'true',
         'Mem/NotLinkedNodesKept': 'false',
         'Mem/STMSize': '15',
         'Mem/LaserScanNormalK': '0',
@@ -197,6 +194,9 @@ def launch_setup(context, *args, **kwargs):
         'Optimizer/Robust': 'true',
         'Optimizer/Iterations': '20',
         'Optimizer/GravitySigma': '0',         # Disable imu constraints (we are already in 2D)
+        'RGBD/AngularUpdate': '0.05',
+        'RGBD/LinearUpdate': '0.05',
+        'RGBD/CreateOccupancyGrid': 'true',
         'RGBD/OptimizeFromGraphEnd': 'false',
         'RGBD/OptimizeMaxError': '0',          # should be 0 if Optimizer/Robust is true
         'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
