@@ -3,5 +3,5 @@ Navigation stack under ROS 2
 
 ## Dependency
 ```
-sudo apt install ros-foxy-robot-localization
+sudo apt install ros-$ROS_DISTRO-robot-localization
 ```
