@@ -12,37 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch_ros.actions import Node
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
-from launch_ros.actions import LoadComposableNodes
-from launch_ros.actions import Node
-from launch_ros.descriptions import ComposableNode, ParameterFile
+from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import RewrittenYaml
 
-def generate_launch_description():
-    # Get the launch directory
-    bringup_dir = get_package_share_directory('nav2_bringup')
-
+def launch_setup(context, *args, **kwargs):
+    # Input parameters declaration
+    # evaluate substitutions at runtime
     namespace = LaunchConfiguration('namespace')
     map_yaml_file = LaunchConfiguration('map')
     db_file = LaunchConfiguration('db_file')
     icp_odom = LaunchConfiguration("icp_odom")
+    rgb = LaunchConfiguration("rgb").perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
     params_file = LaunchConfiguration('params_file')
-    use_composition = LaunchConfiguration('use_composition')
-    container_name = LaunchConfiguration('container_name')
-    container_name_full = (namespace, '/', container_name)
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
-
-    lifecycle_nodes = ['map_server']
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
@@ -50,8 +40,10 @@ def generate_launch_description():
     # https://github.com/ros/robot_state_publisher/pull/30
     # TODO(orduno) Substitute with `PushNodeRemapping`
     #              https://github.com/ros2/launch_ros/issues/56
-    remappings = [('/tf', 'tf'),
-                  ('/tf_static', 'tf_static')]
+    remappings = [
+        ('/tf', 'tf'),
+        ('/tf_static', 'tf_static'),
+    ]
 
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {
@@ -65,57 +57,7 @@ def generate_launch_description():
             param_rewrites=param_substitutions,
             convert_types=True),
         allow_substs=True)
-
-    stdout_linebuf_envvar = SetEnvironmentVariable(
-        'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
-
-    declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
-        description='Top-level namespace')
-
-    declare_map_yaml_cmd = DeclareLaunchArgument(
-        'map',
-        description='Full path to map yaml file to load')
-
-    declare_db_file_cmd = DeclareLaunchArgument(
-        'db_file', default_value='home/nvidia/.ros/rtabmap.db',
-        description='database file name')
-
-    declare_icp_odom_cmd = DeclareLaunchArgument(
-        'icp_odom', default_value='true',
-        description='Whether to use icp odom')
-
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='false',
-        description='Use simulation (Gazebo) clock if true')
-
-    declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
-        description='Full path to the ROS2 parameters file to use for all launched nodes')
-
-    declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', default_value='true',
-        description='Automatically startup the nav2 stack')
-
-    declare_use_composition_cmd = DeclareLaunchArgument(
-        'use_composition', default_value='False',
-        description='Use composed bringup if True')
-
-    declare_container_name_cmd = DeclareLaunchArgument(
-        'container_name', default_value='nav2_container',
-        description='the name of conatiner that nodes will load in if use composition')
-
-    declare_use_respawn_cmd = DeclareLaunchArgument(
-        'use_respawn', default_value='False',
-        description='Whether to respawn if a node crashes. Applied when composition is disabled.')
-
-    declare_log_level_cmd = DeclareLaunchArgument(
-        'log_level', default_value='info',
-        description='log level')
-
+    
     parameters={
         'frame_id': 'base_link',
         'use_sim_time': use_sim_time,
@@ -127,8 +69,6 @@ def generate_launch_description():
         'use_action_for_goal': True,
         'Reg/Strategy': '1',                    # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'false',
-        'RGBD/NeighborLinkRefining': 'True',
-        'RGBD/ProximityPathMaxNeighbors': '10',
         'Grid/Sensor': '0',
         'Grid/RayTracing': 'false',
         'Grid/RangeMin': '0.5', # ignore laser scan points on the robot itself
@@ -151,6 +91,7 @@ def generate_launch_description():
         'Optimizer/Robust': 'true',
         'Optimizer/Iterations': '30',
         'Optimizer/GravitySigma': '0',         # Disable imu constraints (we are already in 2D)
+        # 'RGBD/CreateOccupancyGrid': 'true',
         'RGBD/OptimizeMaxError': '0',          # should be 0 if Optimizer/Robust is true
         'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
         'RGBD/ProximityBySpace': 'true',       # Local loop closure detection (using estimated position) with locations in WM
@@ -163,110 +104,131 @@ def generate_launch_description():
         'Mem/InitWMWithAllNodes': 'True',
     }
 
-    load_nodes = GroupAction(
-        condition=IfCondition(PythonExpression(['not ', use_composition])),
-        actions=[
-            Node(
-                package='nav2_map_server',
-                executable='map_server',
-                name='map_server',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings
-            ),
+    remappings_rtabmap_slam = [
+        ('scan_cloud', '/rslidar_points'),
+        # ('odom', 'icp_odom'),
+        ('odom', '/odometry/filtered'),
+    ]
+    parameters_rtabmap = parameters
 
-            # rtab map
-            # ICP odometry (optional)
-            Node(
-                condition=IfCondition(LaunchConfiguration('icp_odom')),
-                package='rtabmap_odom', executable='icp_odometry', output='screen',
-                parameters=[parameters, 
-                            {
-                                # 'odom_frame_id':'icp_odom',
-                                # 'guess_frame_id':'odom',
-                                'odom_frame_id':'odom',
-                                "publish_tf": False,
-                            }
-                ],
-                remappings=[
-                    ('scan_cloud', '/rslidar_points'),
-                    ('odom', 'icp_odom'),
-                ],
-            ),
-            
-            # SLAM:
-            Node(
-                package='rtabmap_slam', executable='rtabmap', output='screen',
-                parameters=[parameters],
-                remappings=[
-                    ('scan_cloud', '/rslidar_points'),
-                    # ('odom', 'icp_odom'),
-                    ('odom', '/odometry/filtered'),
-                ],
-                arguments=[
-                    # '-d', # This will delete the previous database (~/.ros/rtabmap.db)
-                    # '--database_path', db_file,
-                ],
-            ),
+    if rgb.lower() in ("true", "1"): # in case it is a string:
+        parameters_rtabmap['subscribe_rgb']=True
+        parameters_rtabmap['Reg/Strategy']='2'
+        remappings_rtabmap_slam.extend([
+            ('rgb/camera_info', '/camera_info'),
+            ('rgb/image', '/image_raw'),
+        ])
 
-            Node(
-                package='nav2_lifecycle_manager',
-                executable='lifecycle_manager',
-                name='lifecycle_manager_localization',
-                output='screen',
-                arguments=['--ros-args', '--log-level', log_level],
-                parameters=[{'use_sim_time': use_sim_time},
-                            {'autostart': autostart},
-                            {'node_names': lifecycle_nodes}]
-            ),
-        ]
+    # RGB camera
+    start_usb_cam_cmd = Node(
+        package='usb_cam',
+        executable='usb_cam_node_exe',
+        name='usb_cam',
+        output='screen',
+        parameters=[
+            '/home/nvidia/ros2_humble/src/usb_cam/config/params_hik.yaml'
+        ],
+        condition=IfCondition(
+            PythonExpression([
+                "'", rgb, "' == 'true' and '", icp_odom, "' == 'false'"
+            ])
+        ),
     )
 
-    load_composable_nodes = LoadComposableNodes(
-        condition=IfCondition(use_composition),
-        target_container=container_name_full,
-        composable_node_descriptions=[
-            ComposableNode(
-                package='nav2_map_server',
-                plugin='nav2_map_server::MapServer',
-                name='map_server',
-                parameters=[configured_params],
-                remappings=remappings),
-            # TODO::plugins
-            ComposableNode(
-                package='nav2_lifecycle_manager',
-                plugin='nav2_lifecycle_manager::LifecycleManager',
-                name='lifecycle_manager_localization',
-                parameters=[{'use_sim_time': use_sim_time,
-                             'autostart': autostart,
-                             'node_names': lifecycle_nodes}]),
+    # rtab map
+    # ICP odometry (optional)
+    start_rtabmap_odom_cmd = Node(
+        condition=IfCondition(
+            PythonExpression([
+                "'", icp_odom, "' == 'true' and '", rgb, "' == 'false'"
+            ])
+        ),
+        package='rtabmap_odom', executable='icp_odometry', output='screen',
+        parameters=[parameters, 
+                    {
+                        # 'odom_frame_id':'icp_odom',
+                        # 'guess_frame_id':'odom',
+                        'odom_frame_id':'odom',
+                        "publish_tf": False,
+                    }
+        ],
+        remappings=[
+            ('scan_cloud', '/rslidar_points'),
+            ('odom', 'icp_odom'),
+        ],
+    )
+    
+    # SLAM:
+    start_rtabmap_slam_cmd = Node(
+        package='rtabmap_slam', executable='rtabmap', output='screen',
+        parameters=[parameters_rtabmap],
+        remappings=remappings_rtabmap_slam,
+        arguments=[
+            # '-d', # This will delete the previous database (~/.ros/rtabmap.db)
+            # '--database_path', db_file,
         ],
     )
 
-    # Create the launch description and populate
-    ld = LaunchDescription()
+    start_map_server_cmd = Node(
+        package='nav2_map_server',
+        executable='map_server',
+        name='map_server',
+        output='screen',
+        respawn=use_respawn,
+        respawn_delay=2.0,
+        parameters=[configured_params],
+        arguments=['--ros-args', '--log-level', log_level],
+        remappings=remappings
+    )
 
-    # Set environment variables
-    ld.add_action(stdout_linebuf_envvar)
+    lifecycle_nodes = ['map_server']
+    start_lifecycle_manager_cmd = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_localization',
+        output='screen',
+        arguments=['--ros-args', '--log-level', log_level],
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'autostart': autostart},
+                    {'node_names': lifecycle_nodes}]
+    )
 
-    # Declare the launch options
-    ld.add_action(declare_namespace_cmd)
-    ld.add_action(declare_map_yaml_cmd)
-    ld.add_action(declare_db_file_cmd)
-    ld.add_action(declare_icp_odom_cmd)
-    ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_params_file_cmd)
-    ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_use_composition_cmd)
-    ld.add_action(declare_container_name_cmd)
-    ld.add_action(declare_use_respawn_cmd)
-    ld.add_action(declare_log_level_cmd)
+    launch_nodes = [
+        start_map_server_cmd,
+        start_lifecycle_manager_cmd,
+        start_usb_cam_cmd,
+        start_rtabmap_odom_cmd,
+        start_rtabmap_slam_cmd,
+    ]
 
-    # Add the actions to launch all of the localiztion nodes
-    ld.add_action(load_nodes)
-    ld.add_action(load_composable_nodes)
+    return launch_nodes
 
-    return ld
+def generate_launch_description():
+    return LaunchDescription([
+        # Declare the launch arguments
+        DeclareLaunchArgument('namespace', default_value='',
+            description='Top-level namespace'),
+        DeclareLaunchArgument('map',
+            description='Full path to map yaml file to load'),
+        DeclareLaunchArgument('db_file', default_value='home/nvidia/.ros/rtabmap.db',
+            description='database file name'),
+        DeclareLaunchArgument('icp_odom', default_value='false',
+            description='Whether to use icp odom'),
+        DeclareLaunchArgument('rgb', default_value='false',
+            description='Whether to use RGB visual'),
+        DeclareLaunchArgument('use_sim_time', default_value='false',
+            description='Use simulation (Gazebo) clock if true'),
+        DeclareLaunchArgument('params_file', default_value='',
+            description='Full path to the ROS2 parameters file to use for all launched nodes'),
+        DeclareLaunchArgument('autostart', default_value='true',
+            description='Automatically startup the nav2 stack'),
+        DeclareLaunchArgument('use_composition', default_value='False',
+            description='Use composed bringup if True'),
+        DeclareLaunchArgument('container_name', default_value='nav2_container',
+            description='the name of conatiner that nodes will load in if use composition'),
+        DeclareLaunchArgument('use_respawn', default_value='False',
+            description='Whether to respawn if a node crashes. Applied when composition is disabled'),
+        DeclareLaunchArgument('log_level', default_value='info',
+            description='log level'),
+        OpaqueFunction(function=launch_setup)
+    ])
