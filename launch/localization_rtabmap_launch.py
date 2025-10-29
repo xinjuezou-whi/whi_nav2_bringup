@@ -69,12 +69,14 @@ def launch_setup(context, *args, **kwargs):
         'use_action_for_goal': True,
         'Reg/Strategy': '1',                    # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'false',
-        'Grid/Sensor': '0',
+        'Grid/Sensor': '0',                     # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
         'Grid/RayTracing': 'false',
         'Grid/RangeMin': '0.5', # ignore laser scan points on the robot itself
         'Grid/RangeMax': '60.0',
-        'Grid/MaxGroundHeight': '0.05',
-        'Grid/MinGroundHeight': '-0.2',
+        'Grid/NormalsSegmentation': 'false',
+        'Grid/MaxGroundHeight': '0.03',
+        'Grid/MinGroundHeight': '0.0',
+        'Grid/MaxObstacleHeight': '2.0',
         'Grid/FlatObstacleDetected': 'true',
         'Icp/VoxelSize': '0.1',
         'Icp/PointToPlaneK': '0',
@@ -91,7 +93,7 @@ def launch_setup(context, *args, **kwargs):
         'Optimizer/Robust': 'true',
         'Optimizer/Iterations': '30',
         'Optimizer/GravitySigma': '0',         # Disable imu constraints (we are already in 2D)
-        # 'RGBD/CreateOccupancyGrid': 'true',
+        'RGBD/CreateOccupancyGrid': 'false',
         'RGBD/OptimizeMaxError': '0',          # should be 0 if Optimizer/Robust is true
         'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
         'RGBD/ProximityBySpace': 'true',       # Local loop closure detection (using estimated position) with locations in WM
