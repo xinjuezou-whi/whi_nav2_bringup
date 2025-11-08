@@ -72,7 +72,7 @@ def launch_setup(context, *args, **kwargs):
         'Grid/Sensor': '0',                     # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
         'Grid/RayTracing': 'false',
         'Grid/RangeMin': '0.5', # ignore laser scan points on the robot itself
-        'Grid/RangeMax': '60.0',
+        'Grid/RangeMax': '100.0',
         'Grid/NormalsSegmentation': 'false',
         'Grid/MaxGroundHeight': '0.03',
         'Grid/MinGroundHeight': '0.0',

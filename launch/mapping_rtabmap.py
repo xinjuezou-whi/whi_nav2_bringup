@@ -48,6 +48,8 @@ def launch_setup(context, *args, **kwargs):
     bag_file = LaunchConfiguration("bag_file").perform(context)
     landmark = LaunchConfiguration("landmark").perform(context)
     rgb = LaunchConfiguration("rgb").perform(context)
+    create_dict = LaunchConfiguration("create_dict").perform(context)
+    fixed_dict = LaunchConfiguration("fixed_dict").perform(context)
 
     # check running
     if LaunchConfiguration('use_sim_time').perform(context).lower() in ("false", "1"): # in case it is a string
@@ -166,24 +168,24 @@ def launch_setup(context, *args, **kwargs):
         'Grid/ClusterRadius': '0.1',
         'Grid/MinClusterSize': '10',
         'Grid/RangeMin': '0.5',
-        'Grid/RangeMax': '60.0',
+        'Grid/RangeMax': '100.0',
         'Grid/NormalsSegmentation': 'false',
         'Grid/MaxGroundHeight': '0.03',
         'Grid/MinGroundHeight': '0.0',
         'Grid/MaxObstacleHeight': '2.0',
         'Grid/FlatObstacleDetected': 'true',
         'Mem/NotLinkedNodesKept': 'false',
-        'Mem/STMSize': '15',
-        'Mem/LaserScanNormalK': '0',
-        'Mem/LaserScanNormalRadius': '0.5',
+        'Mem/STMSize': '20',
+        'Mem/LaserScanNormalK': '5',
+        'Mem/LaserScanNormalRadius': '0.0',
         'Mem/LaserScanVoxelSize': '0.1',
         'Mem/ReduceGraph': 'true',             # to suppress the size of db
         'Mem/BinDataKept': 'false',            # to suppress the size of db
         'Reg/Strategy': '1',                   # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'true',
         'Icp/VoxelSize': '0.1',
-        'Icp/PointToPlaneK': '0',
-        'Icp/PointToPlaneRadius': '0.5',
+        'Icp/PointToPlaneK': '5',
+        'Icp/PointToPlaneRadius': '0.0',
         'Icp/PointToPlane': 'true',
         'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
@@ -192,9 +194,9 @@ def launch_setup(context, *args, **kwargs):
         'Icp/Strategy': '1',                   # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
         'Icp/OutlierRatio': '0.8',
         'Icp/CorrespondenceRatio': '0.2',
-        'Optimizer/Strategy': '3',             # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
+        'Optimizer/Strategy': '0',             # 0=TORO(i-100), 1=g2o, 2=GTSAM and 3=Ceres(i-20)
+        'Optimizer/Iterations': '65',
         'Optimizer/Robust': 'true',
-        'Optimizer/Iterations': '20',
         'Optimizer/GravitySigma': '0',         # Disable imu constraints (we are already in 2D)
         'RGBD/AngularUpdate': '0.05',
         'RGBD/LinearUpdate': '0.05',
@@ -204,7 +206,7 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
         'RGBD/ProximityBySpace': 'true',       # Local loop closure detection (using estimated position) with locations in WM
         'RGBD/ProximityByTime': 'false',       # Local loop closure detection with locations in STM
-        'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
+        'RGBD/ProximityPathMaxNeighbors': '0', # Do also proximity detection by space by merging close scans together.
         'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
         'RGBD/Enabled': 'true',                # for visual, along with subscribe_rgb=true
@@ -213,8 +215,6 @@ def launch_setup(context, *args, **kwargs):
         'Vis/SSC': 'true',                     # TODO
         'Kp/MaxFeatures': '500',               # for visual, Maximum features extracted from the images (0 means not bounded, <0 means no extraction)
         'Kp/SSC': 'true',                      # TODO
-        # 'Kp/IncrementalDictionary': 'false',
-        # 'Kp/DictionaryPath': '/home/nvidia/.ros/dict.db',
     }
 
     if icp_odom.lower() in ("true", "1"): # in case it is a string
@@ -231,6 +231,14 @@ def launch_setup(context, *args, **kwargs):
             ('rgb/camera_info', '/camera_info'),
             ('rgb/image', '/image_raw'),
         ])
+    if create_dict.lower() in ("true", "1"): # in case it is a string
+        parameters['Mem/ReduceGraph'] = 'false'
+        parameters['Mem/BinDataKept'] = 'true'
+        parameters['Vis/SSC'] = 'false'
+        parameters['Kp/SSC'] = 'false'
+    if fixed_dict.lower() in ("true", "1"): # in case it is a string
+        parameters['Kp/IncrementalDictionary'] = 'false'
+        parameters['Kp/DictionaryPath'] = '/home/nvidia/.ros/dict_jy_green.db'
     
     if incremental.lower() in ("true", "1"): # in case it is a string
         arguments=[]
@@ -397,5 +405,9 @@ def generate_launch_description():
             description='wether to use landmark'),
         DeclareLaunchArgument('rgb', default_value='false',
             description='wether to use rgb camera for global closure loop'),
+        DeclareLaunchArgument('create_dict', default_value='false',
+            description='wether to create fixed dictionary'),
+        DeclareLaunchArgument('fixed_dict', default_value='false',
+            description='wether to use the fixed dictionary'),
         OpaqueFunction(function=launch_setup)
     ])
