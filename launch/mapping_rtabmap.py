@@ -170,15 +170,15 @@ def launch_setup(context, *args, **kwargs):
         'Grid/RangeMin': '0.5',
         'Grid/RangeMax': '100.0',
         'Grid/NormalsSegmentation': 'false',
-        'Grid/MaxGroundHeight': '0.03',
-        'Grid/MinGroundHeight': '0.0',
+        'Grid/MaxGroundHeight': '-0.01',
+        'Grid/MinGroundHeight': '-0.5',
         'Grid/MaxObstacleHeight': '2.0',
         'Grid/FlatObstacleDetected': 'true',
-        'Mem/NotLinkedNodesKept': 'false',
-        'Mem/STMSize': '20',
+        'Mem/STMSize': '15',
         'Mem/LaserScanNormalK': '5',
         'Mem/LaserScanNormalRadius': '0.0',
         'Mem/LaserScanVoxelSize': '0.1',
+        'Mem/NotLinkedNodesKept': 'true',      # to suppress the size of db
         'Mem/ReduceGraph': 'true',             # to suppress the size of db
         'Mem/BinDataKept': 'false',            # to suppress the size of db
         'Reg/Strategy': '1',                   # 0=Vis, 1=Icp, 2=VisIcp
@@ -189,8 +189,8 @@ def launch_setup(context, *args, **kwargs):
         'Icp/PointToPlane': 'true',
         'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
-        'Icp/MaxTranslation': '2',
-        'Icp/MaxCorrespondenceDistance': '0.5',
+        'Icp/MaxTranslation': '1.0',
+        'Icp/MaxCorrespondenceDistance': '0.25', # TODO
         'Icp/Strategy': '1',                   # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
         'Icp/OutlierRatio': '0.8',
         'Icp/CorrespondenceRatio': '0.2',
@@ -206,9 +206,9 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
         'RGBD/ProximityBySpace': 'true',       # Local loop closure detection (using estimated position) with locations in WM
         'RGBD/ProximityByTime': 'false',       # Local loop closure detection with locations in STM
-        'RGBD/ProximityPathMaxNeighbors': '0', # Do also proximity detection by space by merging close scans together.
+        'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
         'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
-        'RGBD/ProximityOdomGuess': 'true',
+        'RGBD/ProximityOdomGuess': 'true',     # TODO
         'RGBD/Enabled': 'true',                # for visual, along with subscribe_rgb=true
         'Vis/MinInliers':'20',                 # for visual
         'Vis/MaxFeatures':'1000',              # for visual
@@ -232,6 +232,7 @@ def launch_setup(context, *args, **kwargs):
             ('rgb/image', '/image_raw'),
         ])
     if create_dict.lower() in ("true", "1"): # in case it is a string
+        parameters['Mem/NotLinkedNodesKept'] = 'false'
         parameters['Mem/ReduceGraph'] = 'false'
         parameters['Mem/BinDataKept'] = 'true'
         parameters['Vis/SSC'] = 'false'
