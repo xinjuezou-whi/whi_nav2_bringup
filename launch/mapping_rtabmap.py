@@ -147,13 +147,13 @@ def launch_setup(context, *args, **kwargs):
 
     # rtab map
     parameters_odom={
-        'Odom/Strategy': '0',                  # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D
+        'Odom/Strategy': '0',                     # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D
         'Odom/GuessMotion': 'true',
         'Odom/ScanKeyFrameThr': '0.4',
         'Odom/Force3DoF': 'true',
-        'OdomF2M/ScanSubtractRadius': '0.1',   # Radius used to filter points of a new added scan to local map. This could match the voxel size of the scans
+        'OdomF2M/ScanSubtractRadius': '0.1',      # Radius used to filter points of a new added scan to local map. This could match the voxel size of the scans
         'OdomF2M/ScanMaxSize': '15000',
-        'OdomF2M/BundleAdjustment': '3',       # Local bundle adjustment: 0=disabled, 1=g2o, 2=cvsba, 3=Ceres
+        'OdomF2M/BundleAdjustment': '3',          # Local bundle adjustment: 0=disabled, 1=g2o, 2=cvsba, 3=Ceres
     }
     parameters={
         'subscribe_depth': False,
@@ -161,60 +161,64 @@ def launch_setup(context, *args, **kwargs):
         'subscribe_scan': False,
         'subscribe_scan_cloud': True,
         'approx_sync': True,
-        'Grid/Sensor': '0',                    # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
+        'Rtabmap/DetectionRate': '2',             # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
+        'Rtabmap/ImageBufferSize': '1',           # 0 means process all incoming data
+        'Grid/Sensor': '0',                       # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
         'Grid/3D': 'false',
-        'Grid/CellSize': '0.1',
+        'Grid/CellSize': '0.05',
         'Grid/RayTracing': 'true',
         'Grid/ClusterRadius': '0.1',
         'Grid/MinClusterSize': '10',
         'Grid/RangeMin': '0.5',
         'Grid/RangeMax': '100.0',
         'Grid/NormalsSegmentation': 'false',
-        'Grid/MaxGroundHeight': '-0.01',
-        'Grid/MinGroundHeight': '-0.5',
-        'Grid/MaxObstacleHeight': '2.0',
+        'Grid/MaxGroundHeight': '0.02',           #'-0.01',
+        'Grid/MinGroundHeight': '0.0',            #'-0.5',
+        'Grid/MaxObstacleHeight': '5.0',
         'Grid/FlatObstacleDetected': 'true',
         'Mem/STMSize': '15',
-        'Mem/LaserScanNormalK': '5',
-        'Mem/LaserScanNormalRadius': '0.0',
-        'Mem/LaserScanVoxelSize': '0.1',
-        'Mem/NotLinkedNodesKept': 'true',      # to suppress the size of db
-        'Mem/ReduceGraph': 'true',             # to suppress the size of db
-        'Mem/BinDataKept': 'false',            # to suppress the size of db
-        'Reg/Strategy': '1',                   # 0=Vis, 1=Icp, 2=VisIcp
+        'Mem/LaserScanNormalK': '0',              # rich features environment
+        'Mem/LaserScanNormalRadius': '1.0',       # corridor-like, large flat surfaces, and sparse features environment
+        'Mem/LaserScanVoxelSize': '0.05',
+        'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db
+        'Mem/ReduceGraph': 'true',                # to suppress the size of db
+        'Mem/BinDataKept': 'false',               # to suppress the size of db
+        'Reg/Strategy': '1',                      # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'true',
-        'Icp/VoxelSize': '0.1',
-        'Icp/PointToPlaneK': '5',
-        'Icp/PointToPlaneRadius': '0.0',
+        'Icp/VoxelSize': '0.05',
         'Icp/PointToPlane': 'true',
+        'Icp/PointToPlaneK': '0',                 # rich features environment
+        'Icp/PointToPlaneRadius': '1.0',          # corridor-like, large flat surfaces, and sparse features environment
+        'Icp/PointToPlaneMinComplexity': '0.015', # 0.02 lower it for corridor-like, large flat surfaces, and sparse features environment
         'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
-        'Icp/MaxTranslation': '1.0',
-        'Icp/MaxCorrespondenceDistance': '0.25', # TODO
-        'Icp/Strategy': '1',                   # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
+        'Icp/MaxTranslation': '1.0',              # TODO 0.2
+        'Icp/MaxCorrespondenceDistance': '0.2',   # TODO 0.1
+        'Icp/Strategy': '1',                      # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
         'Icp/OutlierRatio': '0.8',
-        'Icp/CorrespondenceRatio': '0.2',
-        'Optimizer/Strategy': '0',             # 0=TORO(i-100), 1=g2o, 2=GTSAM and 3=Ceres(i-20)
-        'Optimizer/Iterations': '65',
+        'Icp/CorrespondenceRatio': '0.1',
+        'Optimizer/Strategy': '0',                # 0=TORO(i-100), 1=g2o, 2=GTSAM and 3=Ceres(i-20)
+        'Optimizer/Iterations': '70',
         'Optimizer/Robust': 'true',
-        'Optimizer/GravitySigma': '0',         # Disable imu constraints (we are already in 2D)
+        'Optimizer/GravitySigma': '0',            # Disable imu constraints (we are already in 2D)
         'RGBD/AngularUpdate': '0.05',
         'RGBD/LinearUpdate': '0.05',
         'RGBD/CreateOccupancyGrid': 'true',
         'RGBD/OptimizeFromGraphEnd': 'false',
-        'RGBD/OptimizeMaxError': '0',          # should be 0 if Optimizer/Robust is true
-        'RGBD/NeighborLinkRefining': 'true',   # Do odometry correction with consecutive laser scans
-        'RGBD/ProximityBySpace': 'true',       # Local loop closure detection (using estimated position) with locations in WM
-        'RGBD/ProximityByTime': 'false',       # Local loop closure detection with locations in STM
-        'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
-        'RGBD/ProximityMaxGraphDepth': '0',    # 0 means no limit
-        'RGBD/ProximityOdomGuess': 'true',     # TODO
-        'RGBD/Enabled': 'true',                # for visual, along with subscribe_rgb=true
-        'Vis/MinInliers':'20',                 # for visual
-        'Vis/MaxFeatures':'1000',              # for visual
-        'Vis/SSC': 'true',                     # TODO
-        'Kp/MaxFeatures': '500',               # for visual, Maximum features extracted from the images (0 means not bounded, <0 means no extraction)
-        'Kp/SSC': 'true',                      # TODO
+        'RGBD/OptimizeMaxError': '0',             # should be 0 if Optimizer/Robust is true
+        'RGBD/NeighborLinkRefining': 'true',      # Do odometry correction with consecutive laser scans
+        'RGBD/ProximityBySpace': 'true',          # Local loop closure detection (using estimated position) with locations in WM
+        'RGBD/ProximityByTime': 'false',          # Local loop closure detection with locations in STM
+        'RGBD/ProximityPathMaxNeighbors': '10',   # Do also proximity detection by space by merging close scans together.
+        'RGBD/ProximityMaxGraphDepth': '0',       # 0 means no limit
+        'RGBD/ProximityMaxPaths': '0',            # 0 means no limit
+        'RGBD/ProximityOdomGuess': 'true',
+        'RGBD/Enabled': 'true',                   # for visual, along with subscribe_rgb=true
+        'Vis/MinInliers':'20',                    # for visual
+        'Vis/MaxFeatures':'1000',                 # for visual
+        'Vis/SSC': 'true',
+        'Kp/MaxFeatures': '500',                  # for visual, Maximum features extracted from the images (0 means not bounded, <0 means no extraction)
+        'Kp/SSC': 'true',
     }
 
     if icp_odom.lower() in ("true", "1"): # in case it is a string
