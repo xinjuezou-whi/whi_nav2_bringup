@@ -161,8 +161,9 @@ def launch_setup(context, *args, **kwargs):
         'subscribe_scan': False,
         'subscribe_scan_cloud': True,
         'approx_sync': True,
-        'Rtabmap/DetectionRate': '2',             # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
+        'Rtabmap/DetectionRate': '1',             # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
         'Rtabmap/ImageBufferSize': '1',           # 0 means process all incoming data
+        'Rtabmap/MaxRetrieved': '10',             # TODO
         'Grid/Sensor': '0',                       # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
         'Grid/3D': 'false',
         'Grid/CellSize': '0.05',
@@ -176,29 +177,29 @@ def launch_setup(context, *args, **kwargs):
         'Grid/MinGroundHeight': '0.0',            #'-0.5',
         'Grid/MaxObstacleHeight': '5.0',
         'Grid/FlatObstacleDetected': 'true',
-        'Mem/STMSize': '15',
-        'Mem/LaserScanNormalK': '0',              # rich features environment
-        'Mem/LaserScanNormalRadius': '1.0',       # corridor-like, large flat surfaces, and sparse features environment
-        'Mem/LaserScanVoxelSize': '0.05',
+        'Mem/STMSize': '30',
+        'Mem/LaserScanNormalK': '5',              # rich features environment or refraction surface
+        'Mem/LaserScanNormalRadius': '0',         # corridor-like, large flat surfaces, and sparse features environment
+        'Mem/LaserScanVoxelSize': '0.1',
         'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db
         'Mem/ReduceGraph': 'true',                # to suppress the size of db
         'Mem/BinDataKept': 'false',               # to suppress the size of db
         'Reg/Strategy': '1',                      # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'true',
-        'Icp/VoxelSize': '0.05',
+        'Icp/VoxelSize': '0.1',
         'Icp/PointToPlane': 'true',
-        'Icp/PointToPlaneK': '0',                 # rich features environment
-        'Icp/PointToPlaneRadius': '1.0',          # corridor-like, large flat surfaces, and sparse features environment
-        'Icp/PointToPlaneMinComplexity': '0.015', # 0.02 lower it for corridor-like, large flat surfaces, and sparse features environment
+        'Icp/PointToPlaneK': '5',                 # rich features environment or refraction surface
+        'Icp/PointToPlaneRadius': '0',          # corridor-like, large flat surfaces, and sparse features environment
+        'Icp/PointToPlaneMinComplexity': '0.0125', # 0.02 lower it for corridor-like, large flat surfaces, and sparse features environment
         'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
-        'Icp/MaxTranslation': '1.0',              # TODO 0.2
-        'Icp/MaxCorrespondenceDistance': '0.2',   # TODO 0.1
+        'Icp/MaxTranslation': '0.8',              # TODO 0.2
+        'Icp/MaxCorrespondenceDistance': '0.3',   # TODO 0.1
         'Icp/Strategy': '1',                      # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
         'Icp/OutlierRatio': '0.8',
         'Icp/CorrespondenceRatio': '0.1',
-        'Optimizer/Strategy': '0',                # 0=TORO(i-100), 1=g2o, 2=GTSAM and 3=Ceres(i-20)
-        'Optimizer/Iterations': '70',
+        'Optimizer/Strategy': '3',                # 0=TORO(i-100), 1=g2o, 2=GTSAM and 3=Ceres(i-20)
+        'Optimizer/Iterations': '22',
         'Optimizer/Robust': 'true',
         'Optimizer/GravitySigma': '0',            # Disable imu constraints (we are already in 2D)
         'RGBD/AngularUpdate': '0.05',
@@ -209,7 +210,7 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/NeighborLinkRefining': 'true',      # Do odometry correction with consecutive laser scans
         'RGBD/ProximityBySpace': 'true',          # Local loop closure detection (using estimated position) with locations in WM
         'RGBD/ProximityByTime': 'false',          # Local loop closure detection with locations in STM
-        'RGBD/ProximityPathMaxNeighbors': '10',   # Do also proximity detection by space by merging close scans together.
+        'RGBD/ProximityPathMaxNeighbors': '0',   # Do also proximity detection by space by merging close scans together.
         'RGBD/ProximityMaxGraphDepth': '0',       # 0 means no limit
         'RGBD/ProximityMaxPaths': '0',            # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
@@ -243,7 +244,7 @@ def launch_setup(context, *args, **kwargs):
         parameters['Kp/SSC'] = 'false'
     if fixed_dict.lower() in ("true", "1"): # in case it is a string
         parameters['Kp/IncrementalDictionary'] = 'false'
-        parameters['Kp/DictionaryPath'] = '/home/nvidia/.ros/dict_jy_green.db'
+        parameters['Kp/DictionaryPath'] = '/home/nvidia/.ros/t_02.db'
     
     if incremental.lower() in ("true", "1"): # in case it is a string
         arguments=[]

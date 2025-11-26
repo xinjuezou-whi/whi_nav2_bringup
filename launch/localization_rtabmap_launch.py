@@ -67,7 +67,7 @@ def launch_setup(context, *args, **kwargs):
         'subscribe_scan_cloud': True,
         'approx_sync': True,
         'use_action_for_goal': True,
-        'Rtabmap/DetectionRate': '2',           # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
+        'Rtabmap/DetectionRate': '1',           # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
         'Rtabmap/ImageBufferSize': '1',         # 0 means process all incoming data
         'Reg/Strategy': '1',                    # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'false',
@@ -80,19 +80,19 @@ def launch_setup(context, *args, **kwargs):
         'Grid/MinGroundHeight': '0.0',          #'-0.5',
         'Grid/MaxObstacleHeight': '5.0',
         'Grid/FlatObstacleDetected': 'true',
-        'Icp/VoxelSize': '0.05',
-        'Icp/PointToPlaneK': '0',               # rich features environment
-        'Icp/PointToPlaneRadius': '1.0',        # corridor-like, large flat surfaces, and sparse features environment
+        'Icp/VoxelSize': '0.1',
+        'Icp/PointToPlaneK': '5',               # rich features environment or refraction surface
+        'Icp/PointToPlaneRadius': '0',          # corridor-like, large flat surfaces, and sparse features environment
         'Icp/PointToPlane': 'true',
         'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
-        'Icp/MaxTranslation': '1.0',
-        'Icp/MaxCorrespondenceDistance': '0.25',
+        'Icp/MaxTranslation': '0.8',
+        'Icp/MaxCorrespondenceDistance': '0.3',
         'Icp/Strategy': '1',                    # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
         'Icp/OutlierRatio': '0.8',
         'Icp/CorrespondenceRatio': '0.1',
-        'Optimizer/Strategy': '0',              # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
-        'Optimizer/Iterations': '70',
+        'Optimizer/Strategy': '3',              # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
+        'Optimizer/Iterations': '20',
         'Optimizer/Robust': 'true',
         'Optimizer/GravitySigma': '0',          # Disable imu constraints (we are already in 2D)
         'RGBD/CreateOccupancyGrid': 'false',
@@ -100,12 +100,12 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/NeighborLinkRefining': 'true',    # Do odometry correction with consecutive laser scans
         'RGBD/ProximityBySpace': 'true',        # Local loop closure detection (using estimated position) with locations in WM
         'RGBD/ProximityByTime': 'false',        # Local loop closure detection with locations in STM
-        'RGBD/ProximityPathMaxNeighbors': '10', # Do also proximity detection by space by merging close scans together.
+        'RGBD/ProximityPathMaxNeighbors': '0', # Do also proximity detection by space by merging close scans together.
         'RGBD/ProximityMaxGraphDepth': '0',     # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
-        'Mem/LaserScanNormalK': '0',            # rich features environment
-        'Mem/LaserScanNormalRadius': '1.0',     # Tcorridor-like, large flat surfaces, and sparse features environment
-        'Mem/LaserScanVoxelSize': '0.05',
+        'Mem/LaserScanNormalK': '5',            # rich features environment or refraction surface
+        'Mem/LaserScanNormalRadius': '0',     # Tcorridor-like, large flat surfaces, and sparse features environment
+        'Mem/LaserScanVoxelSize': '0.1',
         # localization
         'Mem/IncrementalMemory': 'False',
         'Mem/InitWMWithAllNodes': 'True',
