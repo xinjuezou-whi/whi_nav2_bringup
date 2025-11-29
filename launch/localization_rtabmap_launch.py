@@ -80,19 +80,19 @@ def launch_setup(context, *args, **kwargs):
         'Grid/MinGroundHeight': '0.0',          #'-0.5',
         'Grid/MaxObstacleHeight': '5.0',
         'Grid/FlatObstacleDetected': 'true',
-        'Icp/VoxelSize': '0.1',
+        'Icp/VoxelSize': '0.075',
         'Icp/PointToPlaneK': '5',               # rich features environment or refraction surface
         'Icp/PointToPlaneRadius': '0',          # corridor-like, large flat surfaces, and sparse features environment
         'Icp/PointToPlane': 'true',
         'Icp/Iterations': '40',
         'Icp/Epsilon': '0.001',
-        'Icp/MaxTranslation': '0.8',
-        'Icp/MaxCorrespondenceDistance': '0.3',
+        'Icp/MaxTranslation': '0.5',
+        'Icp/MaxCorrespondenceDistance': '0.15',
         'Icp/Strategy': '1',                    # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
         'Icp/OutlierRatio': '0.8',
         'Icp/CorrespondenceRatio': '0.1',
         'Optimizer/Strategy': '3',              # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
-        'Optimizer/Iterations': '20',
+        'Optimizer/Iterations': '22',
         'Optimizer/Robust': 'true',
         'Optimizer/GravitySigma': '0',          # Disable imu constraints (we are already in 2D)
         'RGBD/CreateOccupancyGrid': 'false',
@@ -105,7 +105,7 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/ProximityOdomGuess': 'true',
         'Mem/LaserScanNormalK': '5',            # rich features environment or refraction surface
         'Mem/LaserScanNormalRadius': '0',     # Tcorridor-like, large flat surfaces, and sparse features environment
-        'Mem/LaserScanVoxelSize': '0.1',
+        'Mem/LaserScanVoxelSize': '0.075',
         # localization
         'Mem/IncrementalMemory': 'False',
         'Mem/InitWMWithAllNodes': 'True',
