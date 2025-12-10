@@ -228,6 +228,7 @@ def launch_setup(context, *args, **kwargs):
     remappings_robot_odom = [
         ('scan_cloud', '/rslidar_points'),
         ('odom', '/odometry/filtered'),
+        ('imu', '/imu_data'),
     ]
     if rgb.lower() in ("true", "1"): # in case it is a string
         parameters['subscribe_rgb'] = True
