@@ -119,7 +119,7 @@ def launch_setup(context, *args, **kwargs):
         name='usb_cam',
         output='screen',
         parameters=[
-            '/home/nvidia/ros2_humble/src/usb_cam/config/params_hik.yaml'
+            '/home/nvidia/ros2_ws/src/usb_cam/config/params_hik.yaml'
         ],
         condition=IfCondition(LaunchConfiguration("rgb")),
     )
@@ -146,81 +146,91 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # rtab map
-    parameters_odom={
-        'Odom/Strategy': '0',                     # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D
-        'Odom/GuessMotion': 'true',
-        'Odom/ScanKeyFrameThr': '0.4',
-        'Odom/Force3DoF': 'true',
-        'OdomF2M/ScanSubtractRadius': '0.1',      # Radius used to filter points of a new added scan to local map. This could match the voxel size of the scans
-        'OdomF2M/ScanMaxSize': '15000',
-        'OdomF2M/BundleAdjustment': '3',          # Local bundle adjustment: 0=disabled, 1=g2o, 2=cvsba, 3=Ceres
-    }
     parameters={
         'subscribe_depth': False,
+        'subscribe_stereo': False,
         'subscribe_rgb': False,
         'subscribe_scan': False,
         'subscribe_scan_cloud': True,
         'approx_sync': True,
-        'Rtabmap/DetectionRate': '2',             # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
+        'Rtabmap/DetectionRate': '1',             # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
         'Rtabmap/ImageBufferSize': '1',           # 0 means process all incoming data
-        'Rtabmap/MaxRetrieved': '10',             # TODO
+        'Rtabmap/MaxRetrieved': '10',
+        'Rtabmap/LoopThr': '0.11',
         'Grid/Sensor': '0',                       # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
-        'Grid/3D': 'false',
-        'Grid/CellSize': '0.05',
-        'Grid/RayTracing': 'true',
-        'Grid/ClusterRadius': '0.1',
-        'Grid/MinClusterSize': '10',
         'Grid/RangeMin': '0.5',
         'Grid/RangeMax': '100.0',
-        'Grid/NormalsSegmentation': 'false',
-        'Grid/MaxGroundHeight': '0.02',           #'-0.01',
-        'Grid/MinGroundHeight': '0.0',            #'-0.5',
+        'Grid/CellSize': '0.05',
+        'Grid/MapFrameProjection': 'true',
+        'Grid/NormalsSegmentation': 'false',      # ************************ trying
         'Grid/MaxObstacleHeight': '5.0',
-        'Grid/FlatObstacleDetected': 'true',
+        'Grid/MinGroundHeight': '0.0',            #'-0.5',
+        'Grid/MaxGroundHeight': '0.05',           #'-0.01',
+        'Grid/3D': 'false',
+        'Grid/RayTracing': 'true',
         'Mem/STMSize': '30',
+        'Mem/LaserScanVoxelSize': '0.05',
         'Mem/LaserScanNormalK': '5',              # rich features environment or refraction surface
         'Mem/LaserScanNormalRadius': '0',         # corridor-like, large flat surfaces, and sparse features environment
-        'Mem/LaserScanVoxelSize': '0.075',
         'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db
         'Mem/ReduceGraph': 'true',                # to suppress the size of db
         'Mem/BinDataKept': 'false',               # to suppress the size of db
+        'Mem/UseOdomGravity': 'true',             # ************************ trying
         'Reg/Strategy': '1',                      # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'true',
-        'Icp/VoxelSize': '0.075',
+        'Icp/Strategy': '1',                      # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
+        'Icp/MaxTranslation': '2.0',              # default 0.2, higher it in outdoor env.
+        'Icp/VoxelSize': '0.05',
+        'Icp/DownsamplingStep': '2',
+        'Icp/MaxCorrespondenceDistance': '0.1',
+        'Icp/Iterations': '40',
+        'Icp/Epsilon': '0.00001',
+        'Icp/CorrespondenceRatio': '0.15',        # default 0.1, "Ratio of matching correspondences to accept the transform."
+        'Icp/Force4DoF': 'false',                  # ************************ trying
         'Icp/PointToPlane': 'true',
         'Icp/PointToPlaneK': '5',                 # rich features environment or refraction surface
-        'Icp/PointToPlaneRadius': '0',          # corridor-like, large flat surfaces, and sparse features environment
-        'Icp/PointToPlaneMinComplexity': '0.02', # 0.02 lower it for corridor-like, large flat surfaces, and sparse features environment
-        'Icp/Iterations': '40',
-        'Icp/Epsilon': '0.001',
-        'Icp/MaxTranslation': '0.5',              # TODO 0.2
-        'Icp/MaxCorrespondenceDistance': '0.15',   # TODO 0.1
-        'Icp/Strategy': '1',                      # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
-        'Icp/OutlierRatio': '0.8',
-        'Icp/CorrespondenceRatio': '0.1',
-        'Optimizer/Strategy': '3',                # 0=TORO(i-100), 1=g2o, 2=GTSAM and 3=Ceres(i-20)
-        'Optimizer/Iterations': '22',
-        'Optimizer/Robust': 'true',
-        'Optimizer/GravitySigma': '0',            # Disable imu constraints (we are already in 2D)
+        'Icp/PointToPlaneRadius': '0',            # corridor-like, large flat surfaces, and sparse features environment
+        'Icp/PointToPlaneGroundNormalsUp': '0.5', # ************************ trying
+        'Icp/PointToPlaneMinComplexity': '0.025', # 0.02 higher it for corridor-like, large flat surfaces, and sparse features environment
+        'Icp/PointToPlaneLowComplexityStrategy': '2', # ************************ trying
+        'Icp/OutlierRatio': '0.85',
+        'Icp/PMMatcherKnn': '5',                  # ************************ trying
+        'Icp/PMMatcherEpsilon': '0.00001',        # ************************ trying
+        'Optimizer/Strategy': '1',                # 0=TORO(i-100), 1=g2o(i-20), 2=GTSAM(i-20) and 3=Ceres(i-20)
+        'Optimizer/Iterations': '30',
+        'Optimizer/Robust': 'true',               # Robust graph optimization using Vertigo (only work for g2o and GTSAM optimization strategies)."
         'RGBD/AngularUpdate': '0.05',
         'RGBD/LinearUpdate': '0.05',
         'RGBD/CreateOccupancyGrid': 'true',
         'RGBD/OptimizeFromGraphEnd': 'false',
         'RGBD/OptimizeMaxError': '0',             # should be 0 if Optimizer/Robust is true
         'RGBD/NeighborLinkRefining': 'true',      # Do odometry correction with consecutive laser scans
-        'RGBD/ProximityBySpace': 'true',          # Local loop closure detection (using estimated position) with locations in WM
+        'RGBD/LoopClosureReextractFeatures': 'true',
         'RGBD/ProximityByTime': 'false',          # Local loop closure detection with locations in STM
-        'RGBD/ProximityPathMaxNeighbors': '0',   # Do also proximity detection by space by merging close scans together.
-        'RGBD/ProximityMaxGraphDepth': '0',       # 0 means no limit
+        'RGBD/ProximityBySpace': 'true',          # Local loop closure detection (using estimated position) with locations in WM
+        'RGBD/ProximityPathMaxNeighbors': '2',    # Maximum neighbor nodes compared on each path for one-to-many proximity detection. Set to 0 to disable one-to-many proximity detection (by merging the laser scans)
+        'RGBD/ProximityMaxGraphDepth': '0',       # default 50, Set 0 to ignore for huge map
         'RGBD/ProximityMaxPaths': '0',            # 0 means no limit
         'RGBD/ProximityOdomGuess': 'true',
         'RGBD/Enabled': 'true',                   # for visual, along with subscribe_rgb=true
-        'Vis/MinInliers':'20',                    # for visual
+        'Vis/EstimationType': '2',                # 0:3D->3D, 1:3D->2D (PnP), 2:2D->2D (Epipolar Geometry)
+        'Vis/FeatureType': '0',                   # 0=SURF
+        'Vis/EpipolarGeometryVar': '0.1',         # default 0.1
+        'Vis/MinInliers':'10',                    # default 20
         'Vis/MaxFeatures':'1000',                 # for visual
-        'Vis/SSC': 'true',
+        'Vis/SSC': 'false',
+        'Vis/CorGuessMatchToProjection': 'true',  # ************************ trying
+        'Kp/SSC': 'false',
         'Kp/MaxFeatures': '500',                  # for visual, Maximum features extracted from the images (0 means not bounded, <0 means no extraction)
-        'Kp/SSC': 'true',
+        'Kp/DetectorStrategy': '0',               # 0=SURF
+        # odometry
+        'Odom/Strategy': '0',                     # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D
+        'Odom/Holonomic': 'false',                # ************************ trying
+        'Odom/GuessMotion': 'true',
+        'OdomF2M/ScanSubtractRadius': '0.05',     # Radius used to filter points of a new added scan to local map. This could match the voxel size of the scans
+        'OdomF2M/BundleAdjustment': '1',          # Local bundle adjustment: 0=disabled, 1=g2o, 2=cvsba, 3=Ceres
     }
+    parameters['RGBD/ProximityGlobalScanMap'] = 'true'
 
     if icp_odom.lower() in ("true", "1"): # in case it is a string
         parameters['Icp/Strategy'] = '1'
@@ -228,6 +238,7 @@ def launch_setup(context, *args, **kwargs):
     remappings_robot_odom = [
         ('scan_cloud', '/rslidar_points'),
         ('odom', '/odometry/filtered'),
+        ('imu', '/imu_data'),
     ]
     if rgb.lower() in ("true", "1"): # in case it is a string
         parameters['subscribe_rgb'] = True
@@ -240,8 +251,6 @@ def launch_setup(context, *args, **kwargs):
         parameters['Mem/NotLinkedNodesKept'] = 'false'
         parameters['Mem/ReduceGraph'] = 'false'
         parameters['Mem/BinDataKept'] = 'true'
-        parameters['Vis/SSC'] = 'false'
-        parameters['Kp/SSC'] = 'false'
     if fixed_dict.lower() in ("true", "1"): # in case it is a string
         parameters['Kp/IncrementalDictionary'] = 'false'
         parameters['Kp/DictionaryPath'] = '/home/nvidia/.ros/t_02.db'
@@ -256,7 +265,6 @@ def launch_setup(context, *args, **kwargs):
     start_rtabmap_odom_cmd = Node(
         package='rtabmap_odom', executable='icp_odometry', output='screen',
         parameters=[
-            parameters_odom,
             parameters,
             {
                 'frame_id': 'base_link',
@@ -297,12 +305,12 @@ def launch_setup(context, *args, **kwargs):
     start_rtabmap_slam_icp_cmd = Node(
         package='rtabmap_slam', executable='rtabmap', output='screen',
         parameters=[
+            parameters,
             {
                 'frame_id': 'base_link',
                 'wait_for_transform': 0.25,
                 'use_sim_time': use_sim_time,
             },
-            parameters,
         ],
         remappings=[
             ('scan_cloud', 'assembled_cloud'),

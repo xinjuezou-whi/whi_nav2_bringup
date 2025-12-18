@@ -176,9 +176,11 @@ def launch_setup(context, *args, **kwargs):
         executable='lifecycle_manager',
         name='lifecycle_manager_whi',
         output='screen',
-        parameters=[{'use_sim_time': use_sim_time},
-                    {'autostart': True},
-                    {'node_names': lifecycle_nodes}]
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            {'autostart': True},
+            {'node_names': lifecycle_nodes}
+        ]
     )
     
     # rviz visualization
