@@ -80,39 +80,40 @@ def launch_setup(context, *args, **kwargs):
         'Grid/MaxGroundHeight': '0.05',           #'-0.01',
         'Grid/3D': 'false',
         'Grid/RayTracing': 'true',
-        'Mem/STMSize': '30',
-        'Mem/LaserScanVoxelSize': '0.05',
-        'Mem/LaserScanNormalK': '5',              # rich features environment or refraction surface
+        'Mem/STMSize': '10',                      # ************************ trying
+        'Mem/LaserScanVoxelSize': '0.0',          # ************************ trying
+        'Mem/LaserScanNormalK': '0',              # ************************ trying
         'Mem/LaserScanNormalRadius': '0',         # corridor-like, large flat surfaces, and sparse features environment
         'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db
         'Mem/ReduceGraph': 'true',                # to suppress the size of db
         'Mem/BinDataKept': 'false',               # to suppress the size of db
         'Mem/UseOdomGravity': 'true',             # ************************ trying
         'Reg/Strategy': '1',                      # 0=Vis, 1=Icp, 2=VisIcp
-        'Reg/Force3DoF': 'true',
+        'Reg/Force3DoF': 'false',                 # ************************ trying
         'Icp/Strategy': '1',                      # 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
-        'Icp/MaxTranslation': '2.0',              # default 0.2, higher it in outdoor env.
-        'Icp/VoxelSize': '0.05',
-        'Icp/DownsamplingStep': '2',
-        'Icp/MaxCorrespondenceDistance': '0.1',
-        'Icp/Iterations': '40',
+        'Icp/MaxTranslation': '5.0',              # ************************ trying
+        'Icp/VoxelSize': '0.12',                  # *********************** trying
+        'Icp/DownsamplingStep': '1',              # *********************** trying
+        'Icp/MaxCorrespondenceDistance': '0.25',   # *********************** trying
+        'Icp/Iterations': '50',                   # ************************ trying
         'Icp/Epsilon': '0.00001',
-        'Icp/CorrespondenceRatio': '0.15',        # default 0.1, "Ratio of matching correspondences to accept the transform."
+        'Icp/CorrespondenceRatio': '0.1',         # default 0.1, "Ratio of matching correspondences to accept the transform."
         'Icp/Force4DoF': 'false',                  # ************************ trying
         'Icp/PointToPlane': 'true',
-        'Icp/PointToPlaneK': '5',                 # rich features environment or refraction surface
+        'Icp/PointToPlaneK': '10',                # ************************ trying
         'Icp/PointToPlaneRadius': '0',            # corridor-like, large flat surfaces, and sparse features environment
         'Icp/PointToPlaneGroundNormalsUp': '0.5', # ************************ trying
         'Icp/PointToPlaneMinComplexity': '0.025', # 0.02 higher it for corridor-like, large flat surfaces, and sparse features environment
         'Icp/PointToPlaneLowComplexityStrategy': '2', # ************************ trying
         'Icp/OutlierRatio': '0.85',
-        'Icp/PMMatcherKnn': '5',                  # ************************ trying
+        'Icp/PMMatcherKnn': '30',                 # ************************ trying
         'Icp/PMMatcherEpsilon': '0.00001',        # ************************ trying
         'Optimizer/Strategy': '1',                # 0=TORO(i-100), 1=g2o(i-20), 2=GTSAM(i-20) and 3=Ceres(i-20)
         'Optimizer/Iterations': '30',
         'Optimizer/Robust': 'true',               # Robust graph optimization using Vertigo (only work for g2o and GTSAM optimization strategies)."
         'RGBD/AngularUpdate': '0.05',
         'RGBD/LinearUpdate': '0.05',
+        'RGBD/ForceOdom3DoF': 'false',            # ************************ trying
         'RGBD/CreateOccupancyGrid': 'true',
         'RGBD/OptimizeFromGraphEnd': 'false',
         'RGBD/OptimizeMaxError': '0',             # should be 0 if Optimizer/Robust is true
@@ -120,13 +121,13 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/LoopClosureReextractFeatures': 'true',
         'RGBD/ProximityByTime': 'false',          # Local loop closure detection with locations in STM
         'RGBD/ProximityBySpace': 'true',          # Local loop closure detection (using estimated position) with locations in WM
-        'RGBD/ProximityPathMaxNeighbors': '2',    # Maximum neighbor nodes compared on each path for one-to-many proximity detection. Set to 0 to disable one-to-many proximity detection (by merging the laser scans)
         'RGBD/ProximityMaxGraphDepth': '0',       # default 50, Set 0 to ignore for huge map
         'RGBD/ProximityMaxPaths': '0',            # 0 means no limit
+        'RGBD/ProximityPathFilteringRadius': '3.0', # ************************ trying
+        'RGBD/ProximityPathMaxNeighbors': '4',    # Maximum neighbor nodes compared on each path for one-to-many proximity detection. Set to 0 to disable one-to-many proximity detection (by merging the laser scans)
         'RGBD/ProximityOdomGuess': 'true',
         'RGBD/Enabled': 'true',                   # for visual, along with subscribe_rgb=true
         'Vis/EstimationType': '2',                # 0:3D->3D, 1:3D->2D (PnP), 2:2D->2D (Epipolar Geometry)
-        'Vis/FeatureType': '0',                   # 0=SURF
         'Vis/EpipolarGeometryVar': '0.1',         # default 0.1
         'Vis/MinInliers':'10',                    # default 20
         'Vis/MaxFeatures':'1000',                 # for visual
@@ -134,7 +135,6 @@ def launch_setup(context, *args, **kwargs):
         'Vis/CorGuessMatchToProjection': 'true',  # ************************ trying
         'Kp/SSC': 'false',
         'Kp/MaxFeatures': '500',                  # for visual, Maximum features extracted from the images (0 means not bounded, <0 means no extraction)
-        'Kp/DetectorStrategy': '0',               # 0=SURF
         # odometry
         'Odom/Strategy': '0',                     # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D
         'Odom/Holonomic': 'false',                # ************************ trying
