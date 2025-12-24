@@ -80,10 +80,6 @@ def launch_setup(context, *args, **kwargs):
         'Grid/MaxGroundHeight': '0.05',           #'-0.01',
         'Grid/3D': 'false',
         'Grid/RayTracing': 'true',
-        'Mem/STMSize': '10',                      # ************************ trying
-        'Mem/LaserScanVoxelSize': '0.0',          # ************************ trying
-        'Mem/LaserScanNormalK': '0',              # ************************ trying
-        'Mem/LaserScanNormalRadius': '0',         # corridor-like, large flat surfaces, and sparse features environment
         'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db
         'Mem/ReduceGraph': 'true',                # to suppress the size of db
         'Mem/BinDataKept': 'false',               # to suppress the size of db
