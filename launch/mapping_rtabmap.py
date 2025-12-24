@@ -168,10 +168,6 @@ def launch_setup(context, *args, **kwargs):
         'Grid/MaxGroundHeight': '0.05',           #'-0.01',
         'Grid/3D': 'false',
         'Grid/RayTracing': 'true',
-        'Mem/STMSize': '10',                      # ************************ trying
-        'Mem/LaserScanVoxelSize': '0.0',          # ************************ trying
-        'Mem/LaserScanNormalK': '0',              # ************************ trying
-        'Mem/LaserScanNormalRadius': '0',         # corridor-like, large flat surfaces, and sparse features environment
         'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db
         'Mem/ReduceGraph': 'true',                # to suppress the size of db
         'Mem/BinDataKept': 'false',               # to suppress the size of db
@@ -203,11 +199,9 @@ def launch_setup(context, *args, **kwargs):
         'RGBD/LinearUpdate': '0.05',
         'RGBD/ForceOdom3DoF': 'false',            # ************************ trying
         'RGBD/CreateOccupancyGrid': 'true',
-        'RGBD/OptimizeFromGraphEnd': 'false',
         'RGBD/OptimizeMaxError': '0',             # should be 0 if Optimizer/Robust is true
         'RGBD/NeighborLinkRefining': 'true',      # Do odometry correction with consecutive laser scans
         'RGBD/LoopClosureReextractFeatures': 'true',
-        'RGBD/ProximityByTime': 'false',          # Local loop closure detection with locations in STM
         'RGBD/ProximityBySpace': 'true',          # Local loop closure detection (using estimated position) with locations in WM
         'RGBD/ProximityMaxGraphDepth': '0',       # default 50, Set 0 to ignore for huge map
         'RGBD/ProximityMaxPaths': '0',            # 0 means no limit
@@ -219,14 +213,11 @@ def launch_setup(context, *args, **kwargs):
         'Vis/EpipolarGeometryVar': '0.1',         # default 0.1
         'Vis/MinInliers':'10',                    # default 20
         'Vis/MaxFeatures':'1000',                 # for visual
-        'Vis/SSC': 'false',
         'Vis/CorGuessMatchToProjection': 'true',  # ************************ trying
-        'Kp/SSC': 'false',
         'Kp/MaxFeatures': '500',                  # for visual, Maximum features extracted from the images (0 means not bounded, <0 means no extraction)
         # odometry
         'Odom/Strategy': '0',                     # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D
         'Odom/Holonomic': 'false',                # ************************ trying
-        'Odom/GuessMotion': 'true',
         'OdomF2M/ScanSubtractRadius': '0.05',     # Radius used to filter points of a new added scan to local map. This could match the voxel size of the scans
         'OdomF2M/BundleAdjustment': '1',          # Local bundle adjustment: 0=disabled, 1=g2o, 2=cvsba, 3=Ceres
     }
