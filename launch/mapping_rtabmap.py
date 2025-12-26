@@ -45,6 +45,7 @@ def launch_setup(context, *args, **kwargs):
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     icp_odom = LaunchConfiguration("icp_odom").perform(context)
     incremental = LaunchConfiguration("incremental").perform(context)
+    db_file = LaunchConfiguration('db_file')
     bag_file = LaunchConfiguration("bag_file").perform(context)
     landmark = LaunchConfiguration("landmark").perform(context)
     rgb = LaunchConfiguration("rgb").perform(context)
@@ -147,12 +148,16 @@ def launch_setup(context, *args, **kwargs):
 
     # rtab map
     parameters={
+        # database
+        "database_path": LaunchConfiguration('db_file'),
+        # rtabmap_ros
         'subscribe_depth': False,
         'subscribe_stereo': False,
         'subscribe_rgb': False,
         'subscribe_scan': False,
         'subscribe_scan_cloud': True,
         'approx_sync': True,
+        # rtabmap
         'Rtabmap/DetectionRate': '1',             # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
         'Rtabmap/ImageBufferSize': '1',           # 0 means process all incoming data
         'Rtabmap/MaxRetrieved': '10',
@@ -170,7 +175,7 @@ def launch_setup(context, *args, **kwargs):
         'Grid/RayTracing': 'true',
         'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db
         'Mem/ReduceGraph': 'true',                # to suppress the size of db
-        'Mem/BinDataKept': 'false',               # to suppress the size of db
+        'Mem/BinDataKept': 'false',                # to suppress the size of db
         'Mem/UseOdomGravity': 'true',             # ************************ trying
         'Reg/Strategy': '1',                      # 0=Vis, 1=Icp, 2=VisIcp
         'Reg/Force3DoF': 'false',                 # ************************ trying
@@ -228,7 +233,7 @@ def launch_setup(context, *args, **kwargs):
     remappings_robot_odom = [
         ('scan_cloud', '/rslidar_points'),
         ('odom', '/odometry/filtered'),
-        ('imu', '/imu_data'),
+        # ('imu', '/imu_data'),
     ]
     if rgb.lower() in ("true", "1"): # in case it is a string
         parameters['subscribe_rgb'] = True
@@ -403,6 +408,8 @@ def generate_launch_description():
             description='whether to use icp odometry'),
         DeclareLaunchArgument('incremental', default_value='false',
             description='whether to map incrementally'),
+        DeclareLaunchArgument('db_file', default_value='/home/nvidia/.ros/rtabmap.db',
+            description='database file name'),
         DeclareLaunchArgument('bag_file', default_value='/home/nvidia/maps/offline',
             description='input bag file name'),
         DeclareLaunchArgument('landmark', default_value='false',

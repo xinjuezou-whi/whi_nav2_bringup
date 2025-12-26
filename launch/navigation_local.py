@@ -236,7 +236,7 @@ def generate_launch_description():
             'use_rtabmap', default_value='false',
             description='Use rtabmap to localizing'),
         DeclareLaunchArgument(
-            'db_file', default_value='home/nvidia/.ros/rtabmap.db',
+            'db_file', default_value='/home/nvidia/.ros/rtabmap.db',
             description='Full path to pbstream file to load will trigger cartographer localization'),
         OpaqueFunction(function=launch_setup)
     ])
