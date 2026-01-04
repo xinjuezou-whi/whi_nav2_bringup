@@ -1,4 +1,4 @@
-# Copyright 2025 WheelHub Intelligent
+# Copyright (c) 2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import os
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -28,8 +26,6 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
     map_yaml_file = LaunchConfiguration('map')
-    load_state_file = LaunchConfiguration('load_state_file')
-    use_ekf = LaunchConfiguration("use_ekf")
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
     params_file = LaunchConfiguration('params_file')
@@ -39,7 +35,7 @@ def generate_launch_description():
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
 
-    lifecycle_nodes = ['map_server']
+    lifecycle_nodes = ['map_server', 'amcl']
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
@@ -62,8 +58,6 @@ def generate_launch_description():
             param_rewrites=param_substitutions,
             convert_types=True),
         allow_substs=True)
-    
-    cartographer_config_dir = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'config')
 
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
@@ -76,14 +70,6 @@ def generate_launch_description():
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         description='Full path to map yaml file to load')
-    
-    declare_state_file_cmd = DeclareLaunchArgument(
-        'load_state_file',
-        description='Full path to pbstream file to load')
-    
-    declare_use_ekf_cmd = DeclareLaunchArgument(
-        'use_ekf',
-        description='Use ekf to fuse localizationd')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -114,10 +100,6 @@ def generate_launch_description():
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info',
         description='log level')
-    
-    odom_topic = PythonExpression([
-        "'''/odometry/filtered''' if '", use_ekf, "' == 'true' else '''/odom'''"
-    ])
 
     load_nodes = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
@@ -132,29 +114,16 @@ def generate_launch_description():
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings),
-
             Node(
-                package = 'cartographer_ros',
-                executable = 'cartographer_node',
-                parameters = [
-                    {
-                        'use_sim_time': use_sim_time,
-                    }
-                ],
-                arguments = [
-                    '-configuration_directory', cartographer_config_dir,
-                    '-configuration_basename', 'backpack_3d_localization.lua',
-                    '-load_state_filename', load_state_file,
-                    '-load_frozen_state=true',
-                    '-start_trajectory_with_default_topics=true'],
-                remappings = [
-                    ('/points2', '/rslidar_points'),
-                    ('/imu', '/imu_data'),
-                    ('/odom', odom_topic),
-                ],
-                output = 'screen'
-            ),
-
+                package='nav2_amcl',
+                executable='amcl',
+                name='amcl',
+                output='screen',
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[configured_params],
+                arguments=['--ros-args', '--log-level', log_level],
+                remappings=remappings),
             Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
@@ -177,7 +146,12 @@ def generate_launch_description():
                 name='map_server',
                 parameters=[configured_params],
                 remappings=remappings),
-            # TODO::plugin of cartographer
+            ComposableNode(
+                package='nav2_amcl',
+                plugin='nav2_amcl::AmclNode',
+                name='amcl',
+                parameters=[configured_params],
+                remappings=remappings),
             ComposableNode(
                 package='nav2_lifecycle_manager',
                 plugin='nav2_lifecycle_manager::LifecycleManager',
@@ -197,8 +171,6 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_map_yaml_cmd)
-    ld.add_action(declare_state_file_cmd)
-    ld.add_action(declare_use_ekf_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)

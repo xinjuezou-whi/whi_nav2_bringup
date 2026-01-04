@@ -128,7 +128,7 @@ controller_server:
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
-    failure_tolerance: 0.3
+    failure_tolerance: 0.5
     progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
@@ -152,16 +152,16 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.5
       max_vel_y: 0.0
-      max_vel_theta: 0.5
+      max_vel_theta: 0.2
       min_speed_xy: 0.08
       max_speed_xy: 0.5
       min_speed_theta: 0.1
       acc_lim_x: 0.5
       acc_lim_y: 0.0
-      acc_lim_theta: 0.6
+      acc_lim_theta: 0.3
       decel_lim_x: -0.5
       decel_lim_y: 0.0
-      decel_lim_theta: -0.6
+      decel_lim_theta: -0.3
       vx_samples: 20
       vy_samples: 5
       vtheta_samples: 40
@@ -214,7 +214,7 @@ whi_nav2_bt_actions_server:
       plugin: whi_nav2_bt_actions_server/SpinToPath
       simulate_ahead_time: 2.0
       min_rotational_vel: 0.1
-      max_rotational_vel: 1.0
+      max_rotational_vel: 0.3
       rotational_acc_lim: 1.57
       check_collision: false
 
@@ -236,7 +236,7 @@ local_costmap:
       height: 10
       resolution: 0.05
       # robot_radius: 0.22
-      footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
+      footprint: "[[0.518, 0.42], [0.518, -0.42], [-0.518, -0.42], [-0.518, 0.42]]"
       plugins: ["obstacle_layer", "inflation_layer", "voxel_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -254,13 +254,25 @@ local_costmap:
           marking: True
           observation_persistence: 0.0
           data_type: "LaserScan"
+        # observation_sources: pointcloud
+        # pointcloud:
+        #   topic: /cloud_obstacles #/rslidar_points
+        #   min_obstacle_height: 0.05
+        #   max_obstacle_height: 2.0
+        #   obstacle_min_range: 0.0
+        #   obstacle_max_range: 5.0
+        #   raytrace_min_range: 0.0
+        #   raytrace_max_range: 5.0
+        #   clearing: True
+        #   marking: True
+        #   data_type: "PointCloud2"
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 2.0
         cost_scaling_factor: 3.0
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
-        enabled: True
+        enabled: False
         publish_voxel_map: True
         origin_z: 0.0
         z_resolution: 0.2
@@ -300,9 +312,9 @@ global_costmap:
       robot_base_frame: base_link
       use_sim_time: False
       # robot_radius: 0.22
-      footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
+      footprint: "[[0.518, 0.42], [0.518, -0.42], [-0.518, -0.42], [-0.518, 0.42]]"
       resolution: 0.05
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"] #, "voxel_layer"]
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer", "voxel_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -319,9 +331,21 @@ global_costmap:
           marking: True
           observation_persistence: 2.0
           data_type: "LaserScan"
+        # observation_sources: pointcloud
+        # pointcloud:
+        #   topic: /cloud_obstacles #/rslidar_points
+        #   min_obstacle_height: 0.1
+        #   max_obstacle_height: 2.0
+        #   obstacle_min_range: 0.0
+        #   obstacle_max_range: 20.0
+        #   raytrace_min_range: 0.0
+        #   raytrace_max_range: 20.0
+        #   clearing: True
+        #   marking: True
+        #   data_type: "PointCloud2"
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
-        enabled: True
+        enabled: False
         publish_voxel_map: True
         origin_z: 0.0
         z_resolution: 0.2
@@ -331,7 +355,7 @@ global_costmap:
         mark_threshold: 0
         observation_sources: pointcloud
         pointcloud:
-          topic: /rslidar_points
+          topic: /cloud_obstacles #/rslidar_points
           min_obstacle_height: 0.1
           max_obstacle_height: 2.0
           obstacle_min_range: 0.0

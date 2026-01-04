@@ -27,7 +27,6 @@ from launch_ros.actions import PushRosNamespace
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import ReplaceString, RewrittenYaml
 
-
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
@@ -60,9 +59,8 @@ def generate_launch_description():
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {
         'use_sim_time': use_sim_time,
-        'yaml_filename': map_yaml_file}
-    if use_rtabmap:
-        param_substitutions['local_costmap.local_costmap.ros__parameters.global_frame'] = 'icp_odom'
+        'yaml_filename': map_yaml_file,
+    }
 
     # Only it applys when `use_namespace` is True.
     # '<robot_namespace>' keyword shall be replaced by 'namespace' launch argument
@@ -140,13 +138,14 @@ def generate_launch_description():
         'log_level', default_value='info',
         description='log level')
     
-    nav2_path = os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'localization_launch.py')
+    amcl_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_amcl_launch.py')
     cartographer_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_cartographer_launch.py')
     rtabmap_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_rtabmap_launch.py')
     
+    facilities_launch_file = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'facilities_launch.py')
     localization_launch_file = PythonExpression([
         '"', cartographer_path, '" if "', LaunchConfiguration('load_state_file'),
-        '" != "" else ( "', rtabmap_path, '" if "', LaunchConfiguration('use_rtabmap'), '" == "true" else "', nav2_path, '" )'
+        '" != "" else ( "', rtabmap_path, '" if "', LaunchConfiguration('use_rtabmap'), '" == "true" else "', amcl_path, '" )'
     ])
 
     # Specify the actions
@@ -180,14 +179,16 @@ def generate_launch_description():
                               'container_name': 'nav2_container'}.items()),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
+            facilities_launch_file,
             launch_arguments={'namespace': namespace,
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
                               'use_composition': use_composition,
                               'use_respawn': use_respawn,
-                              'container_name': 'nav2_container'}.items()),
+                              'container_name': 'nav2_container',
+                              'use_ekf': use_ekf,
+                            }.items()),
     ])
 
     # Create the launch description and populate

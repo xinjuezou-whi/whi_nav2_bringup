@@ -73,7 +73,7 @@ bt_navigator:
     use_sim_time: False
     global_frame: map
     robot_base_frame: base_link
-    odom_topic: /odometry/filtered
+    odom_topic: /odom
     # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_w_replanning_and_recovery.xml"
     default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_plain_with_spin2path.xml"
     bt_loop_duration: 10
@@ -128,7 +128,7 @@ controller_server:
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
-    failure_tolerance: 0.3
+    failure_tolerance: 2.0 #0.3
     progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
@@ -145,45 +145,35 @@ controller_server:
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
     FollowPath:
-      # DWB
-      plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: True
-      min_vel_x: 0.0
-      min_vel_y: 0.0
-      max_vel_x: 0.5
-      max_vel_y: 0.0
-      max_vel_theta: 0.5
-      min_speed_xy: 0.08
-      max_speed_xy: 0.5
-      min_speed_theta: 0.1
-      acc_lim_x: 0.5
-      acc_lim_y: 0.0
-      acc_lim_theta: 0.6
-      decel_lim_x: -0.5
-      decel_lim_y: 0.0
-      decel_lim_theta: -0.6
-      vx_samples: 20
-      vy_samples: 5
-      vtheta_samples: 40
-      sim_time: 2.0
-      linear_granularity: 0.05
-      angular_granularity: 0.025
-      transform_tolerance: 0.5
-      xy_goal_tolerance: 0.1
-      trans_stopped_velocity: 0.25
-      short_circuit_trajectory_evaluation: True
-      stateful: True
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.02
-      PathAlign.scale: 32.0
-      PathAlign.forward_point_distance: 0.1
-      GoalAlign.scale: 24.0
-      GoalAlign.forward_point_distance: 0.1
-      PathDist.scale: 32.0
-      GoalDist.scale: 24.0
-      RotateToGoal.scale: 32.0
-      RotateToGoal.slowing_factor: 5.0
-      RotateToGoal.lookahead_time: -1.0
+      # Regulated Pure Pursuit
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 0.5
+      use_velocity_scaled_lookahead_dist: false
+      lookahead_dist: 2.0     # effective when use_velocity_scaled_lookahead_dist is false
+      min_lookahead_dist: 0.3 # effective when use_velocity_scaled_lookahead_dist is true
+      max_lookahead_dist: 1.5 # effective when use_velocity_scaled_lookahead_dist is true
+      lookahead_time: 1.5     # effective when use_velocity_scaled_lookahead_dist is true
+      use_rotate_to_heading: true
+      rotate_to_heading_angular_vel: 0.2  # the angular velocity to use while the use_rotate_to_heading is true
+      max_angular_accel: 0.5              # the max angular acceleration to use while the use_rotate_to_heading is true
+      rotate_to_heading_min_angle: 0.5236 # The difference in the path orientation and the starting robot orientation to trigger a rotate in place while the use_rotate_to_heading is true
+      allow_reversing: false # both use_rotate_to_heading and allow_reversing cannot be set to true at the same time
+      transform_tolerance: 0.2
+      min_approach_linear_velocity: 0.1
+      approach_velocity_scaling_dist: 0.6
+      use_collision_detection: true
+      max_allowed_time_to_collision: 1.0 # effective when use_collision_detection is true
+      use_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 0.9  # effective when use_regulated_linear_velocity_scaling is true
+      regulated_linear_scaling_min_speed: 0.25  # effective when use_regulated_linear_velocity_scaling is true
+      use_fixed_curvature_lookahead: false
+      curvature_lookahead_dist: 0.25
+      use_cost_regulated_linear_velocity_scaling: false
+      cost_scaling_dist: 0.3 # effective when use_cost_regulated_linear_velocity_scaling is true
+      cost_scaling_gain: 1.0 # effective when use_cost_regulated_linear_velocity_scaling is true
+      max_robot_pose_search_dist: 8.0
+      min_distance_to_obstacle: 0.5
+      stateful: true
 
 controller_server_rclcpp_node:
   ros__parameters:
@@ -214,7 +204,7 @@ whi_nav2_bt_actions_server:
       plugin: whi_nav2_bt_actions_server/SpinToPath
       simulate_ahead_time: 2.0
       min_rotational_vel: 0.1
-      max_rotational_vel: 1.0
+      max_rotational_vel: 0.3
       rotational_acc_lim: 1.57
       check_collision: false
 
@@ -232,11 +222,11 @@ local_costmap:
       robot_base_frame: base_link
       use_sim_time: False
       rolling_window: true
-      width: 10
-      height: 10
+      width: 8
+      height: 8
       resolution: 0.05
       # robot_radius: 0.22
-      footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
+      footprint: "[[0.518, 0.42], [0.518, -0.42], [-0.518, -0.42], [-0.518, 0.42]]"
       plugins: ["obstacle_layer", "inflation_layer", "voxel_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -247,20 +237,20 @@ local_costmap:
           min_obstacle_height: 0.0
           max_obstacle_height: 2.0
           obstacle_min_range: 0.0
-          obstacle_max_range: 5.0
+          obstacle_max_range: 2.5
           raytrace_min_range: 0.0
-          raytrace_max_range: 5.0
+          raytrace_max_range: 3.0
           clearing: True
           marking: True
           observation_persistence: 0.0
           data_type: "LaserScan"
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 2.0
+        inflation_radius: 1.0
         cost_scaling_factor: 3.0
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
-        enabled: True
+        enabled: False
         publish_voxel_map: True
         origin_z: 0.0
         z_resolution: 0.2
@@ -271,12 +261,12 @@ local_costmap:
         observation_sources: pointcloud
         pointcloud:
           topic: /rslidar_points
-          min_obstacle_height: 0.05
+          min_obstacle_height: 0.12
           max_obstacle_height: 2.0
           obstacle_min_range: 0.0
-          obstacle_max_range: 5.0
+          obstacle_max_range: 2.5
           raytrace_min_range: 0.0
-          raytrace_max_range: 5.0
+          raytrace_max_range: 3.0
           clearing: True
           marking: True
           data_type: "PointCloud2"
@@ -300,9 +290,9 @@ global_costmap:
       robot_base_frame: base_link
       use_sim_time: False
       # robot_radius: 0.22
-      footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
+      footprint: "[[0.518, 0.42], [0.518, -0.42], [-0.518, -0.42], [-0.518, 0.42]]"
       resolution: 0.05
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"] #, "voxel_layer"]
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer", "voxel_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -312,21 +302,21 @@ global_costmap:
           min_obstacle_height: 0.0
           max_obstacle_height: 2.0
           obstacle_min_range: 0.0
-          obstacle_max_range: 20.0
+          obstacle_max_range: 3.0
           raytrace_min_range: 0.0
-          raytrace_max_range: 20.0
+          raytrace_max_range: 3.0
           clearing: True
           marking: True
           observation_persistence: 2.0
           data_type: "LaserScan"
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
-        enabled: True
+        enabled: False
         publish_voxel_map: True
         origin_z: 0.0
         z_resolution: 0.2
         z_voxels: 16
-        min_obstacle_height: 0.05
+        min_obstacle_height: 0.1
         max_obstacle_height: 2.0
         mark_threshold: 0
         observation_sources: pointcloud
@@ -335,9 +325,9 @@ global_costmap:
           min_obstacle_height: 0.1
           max_obstacle_height: 2.0
           obstacle_min_range: 0.0
-          obstacle_max_range: 20.0
+          obstacle_max_range: 3.0
           raytrace_min_range: 0.0
-          raytrace_max_range: 20.0
+          raytrace_max_range: 3.0
           clearing: True
           marking: True
           data_type: "PointCloud2"
@@ -346,7 +336,7 @@ global_costmap:
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 4.0
+        inflation_radius: 2.0
       always_send_full_costmap: True
   global_costmap_client:
     ros__parameters:
@@ -378,6 +368,22 @@ planner_server:
       tolerance: 0.5
       use_astar: false
       allow_unknown: true
+
+      # plugin: "smac_planner/SmacPlanner2D" # In Iron and older versions, "/" was used instead of "::"
+      # tolerance: 0.125                      # tolerance for planning if unable to reach exact pose, in meters
+      # downsample_costmap: false             # whether or not to downsample the map
+      # downsampling_factor: 1                # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
+      # allow_unknown: true                   # allow traveling in unknown space
+      # max_iterations: 1000000               # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
+      # max_on_approach_iterations: 1000      # maximum number of iterations to attempt to reach goal once in tolerance
+      # max_planning_time: 2.0                # max time in s for planner to plan, smooth
+      # cost_travel_multiplier: 2.0           # Cost multiplier to apply to search to steer away from high cost areas. Larger values will place in the center of aisles more exactly (if non-`FREE` cost potential field exists) but take slightly longer to compute. To optimize for speed, a value of 1.0 is reasonable. A reasonable tradeoff value is 2.0. A value of 0.0 effective disables steering away from obstacles and acts like a naive binary search A*.
+      # use_final_approach_orientation: false # Whether to set the final path pose at the goal's orientation to the requested orientation (false) or in line with the approach angle so the robot doesn't rotate to heading (true)
+      # smoother:
+      #   max_iterations: 1000
+      #   w_smooth: 0.3
+      #   w_data: 0.2
+      #   tolerance: 1.0e-10
 
 planner_server_rclcpp_node:
   ros__parameters:

@@ -64,17 +64,14 @@ def launch_setup(context, *args, **kwargs):
     db_file = LaunchConfiguration("db_file")
 
     if local_planner.lower() in ("dwb", "1"): # in case it is a string
-        nav2_params_file_name = f"nav2_params_dwb"
+        nav2_params_file_name = f"nav2_params_dwb_{vehicle}.yaml"
     elif local_planner.lower() in ("mppi", "1"): # in case it is a string
-        nav2_params_file_name = f"nav2_params_mppi"
+        nav2_params_file_name = f"nav2_params_mppi_{vehicle}.yaml"
     elif local_planner.lower() in ("rpp", "1"): # in case it is a string
-        nav2_params_file_name = f"nav2_params_rpp"
+        nav2_params_file_name = f"nav2_params_rpp_{vehicle}.yaml"
     else:
         nav2_params_file_name = f"nav2_params_dwb"
-    if use_ekf.lower() in ("true", "1"): # in case it is a string
-        nav2_params_file_name = nav2_params_file_name + f"_ekf_{vehicle}.yaml"
-    else:
-        nav2_params_file_name = nav2_params_file_name + f"_{vehicle}.yaml"
+
     nav2_params_file=os.path.join(get_package_share_directory('whi_nav2_bringup'),
         'config', nav2_params_file_name)
 
