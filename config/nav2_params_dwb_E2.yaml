@@ -74,8 +74,8 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /odom
-    # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_w_replanning_and_recovery.xml"
-    default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_plain_with_spin2path.xml"
+    default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_w_replanning_and_recovery_registration.xml"
+    # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_plain_with_spin2path.xml"
     bt_loop_duration: 10
     default_server_timeout: 20
     enable_groot_monitoring: True
@@ -241,7 +241,7 @@ local_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan
+        observation_sources: pointcloud # scan
         scan:
           topic: /scan
           min_obstacle_height: 0.0
@@ -254,18 +254,17 @@ local_costmap:
           marking: True
           observation_persistence: 0.0
           data_type: "LaserScan"
-        # observation_sources: pointcloud
-        # pointcloud:
-        #   topic: /cloud_obstacles #/rslidar_points
-        #   min_obstacle_height: 0.05
-        #   max_obstacle_height: 2.0
-        #   obstacle_min_range: 0.0
-        #   obstacle_max_range: 5.0
-        #   raytrace_min_range: 0.0
-        #   raytrace_max_range: 5.0
-        #   clearing: True
-        #   marking: True
-        #   data_type: "PointCloud2"
+        pointcloud:
+          topic: /obstacles #/proj_obstacles
+          min_obstacle_height: 0.03
+          max_obstacle_height: 2.0
+          obstacle_min_range: 0.0
+          obstacle_max_range: 5.0
+          raytrace_min_range: 0.0
+          raytrace_max_range: 5.0
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 2.0
@@ -282,7 +281,7 @@ local_costmap:
         mark_threshold: 0
         observation_sources: pointcloud
         pointcloud:
-          topic: /rslidar_points
+          topic: /obstacles
           min_obstacle_height: 0.05
           max_obstacle_height: 2.0
           obstacle_min_range: 0.0
@@ -318,7 +317,7 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan
+        observation_sources: pointcloud # scan
         scan:
           topic: /scan
           min_obstacle_height: 0.0
@@ -331,18 +330,17 @@ global_costmap:
           marking: True
           observation_persistence: 2.0
           data_type: "LaserScan"
-        # observation_sources: pointcloud
-        # pointcloud:
-        #   topic: /cloud_obstacles #/rslidar_points
-        #   min_obstacle_height: 0.1
-        #   max_obstacle_height: 2.0
-        #   obstacle_min_range: 0.0
-        #   obstacle_max_range: 20.0
-        #   raytrace_min_range: 0.0
-        #   raytrace_max_range: 20.0
-        #   clearing: True
-        #   marking: True
-        #   data_type: "PointCloud2"
+        pointcloud:
+          topic: /obstacles #/proj_obstacles
+          min_obstacle_height: 0.03
+          max_obstacle_height: 2.0
+          obstacle_min_range: 0.0
+          obstacle_max_range: 5.0
+          raytrace_min_range: 0.0
+          raytrace_max_range: 5.0
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: False
@@ -355,7 +353,7 @@ global_costmap:
         mark_threshold: 0
         observation_sources: pointcloud
         pointcloud:
-          topic: /cloud_obstacles #/rslidar_points
+          topic: /obstacles
           min_obstacle_height: 0.1
           max_obstacle_height: 2.0
           obstacle_min_range: 0.0

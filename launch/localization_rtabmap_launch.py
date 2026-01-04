@@ -179,8 +179,23 @@ def launch_setup(context, *args, **kwargs):
         ],
         remappings=remappings_rtabmap,
     )
+
+    # obstacles_detection
+    start_rtabmap_obstacle_detection_cmd = Node(
+        package='rtabmap_util', executable='obstacles_detection', output='screen',
+        parameters=[
+            {
+                'frame_id': 'base_link',
+                'map_frame_id': 'map',
+                'wait_for_transform': 0.25,
+            }
+        ],
+        remappings=[
+            ('cloud', '/rslidar_points'),
+        ],
+    )
     
-    # SLAM:
+    # SLAM
     start_rtabmap_slam_cmd = Node(
         package='rtabmap_slam', executable='rtabmap', output='screen',
         parameters=[
@@ -200,6 +215,7 @@ def launch_setup(context, *args, **kwargs):
     launch_nodes = [
         start_usb_cam_cmd,
         start_rtabmap_odom_cmd,
+        start_rtabmap_obstacle_detection_cmd,
         start_rtabmap_slam_cmd,
     ]
 
