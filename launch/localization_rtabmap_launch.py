@@ -189,7 +189,7 @@ def launch_setup(context, *args, **kwargs):
                 'map_frame_id': 'map',
                 'wait_for_transform': 0.25,
                 'Grid/Sensor': '0',                       # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
-                'Grid/RangeMin': '0.3',
+                'Grid/RangeMin': '0.0',
                 'Grid/RangeMax': '100.0',
                 'Grid/CellSize': '0.15',
                 'Grid/MapFrameProjection': 'true',
