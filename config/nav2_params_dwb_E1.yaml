@@ -74,8 +74,10 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /odom
-    # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_w_replanning_and_recovery.xml"
-    default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_plain_with_spin2path.xml"
+    default_nav_through_poses_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/nav_to_pose_with_consistent_replanning_and_if_path_becomes_invalid.xml"
+    # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_w_replanning_and_recovery_registration.xml"
+    # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_plain_with_spin2path.xml"
     bt_loop_duration: 10
     default_server_timeout: 20
     enable_groot_monitoring: True
@@ -113,6 +115,9 @@ bt_navigator:
     - nav2_planner_selector_bt_node
     - nav2_controller_selector_bt_node
     - nav2_goal_checker_selector_bt_node
+    - nav2_path_expiring_timer_condition
+    - nav2_globally_updated_goal_condition_bt_node
+    - nav2_is_path_valid_condition_bt_node
     - whi_nav2_pose_registration_action_bt_node
     - whi_nav2_spin_to_path_action_bt_node
 
