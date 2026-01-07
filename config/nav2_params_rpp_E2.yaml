@@ -252,7 +252,6 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 1.0
-        cost_scaling_factor: 3.0
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: False
@@ -296,7 +295,7 @@ global_costmap:
       use_sim_time: False
       # robot_radius: 0.22
       footprint: "[[0.518, 0.42], [0.518, -0.42], [-0.518, -0.42], [-0.518, 0.42]]"
-      resolution: 0.05
+      resolution: 0.1
       plugins: ["static_layer", "obstacle_layer", "inflation_layer", "voxel_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -369,16 +368,16 @@ planner_server:
     use_sim_time: False
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 0.5
-      use_astar: false
-      allow_unknown: true
+      # plugin: "nav2_navfn_planner/NavfnPlanner"
+      # tolerance: 0.5
+      # use_astar: false
+      # allow_unknown: false
 
-      # plugin: "smac_planner/SmacPlanner2D" # In Iron and older versions, "/" was used instead of "::"
+      # plugin: "nav2_smac_planner/SmacPlanner2D"
       # tolerance: 0.125                      # tolerance for planning if unable to reach exact pose, in meters
       # downsample_costmap: false             # whether or not to downsample the map
       # downsampling_factor: 1                # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
-      # allow_unknown: true                   # allow traveling in unknown space
+      # allow_unknown: false                   # allow traveling in unknown space
       # max_iterations: 1000000               # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
       # max_on_approach_iterations: 1000      # maximum number of iterations to attempt to reach goal once in tolerance
       # max_planning_time: 2.0                # max time in s for planner to plan, smooth
@@ -389,6 +388,13 @@ planner_server:
       #   w_smooth: 0.3
       #   w_data: 0.2
       #   tolerance: 1.0e-10
+      #   do_refinement: true
+
+      plugin: "nav2_theta_star_planner/ThetaStarPlanner"
+      how_many_corners: 4
+      w_euc_cost: 1.0
+      w_traversal_cost: 2.0
+      allow_unknown: false
 
 planner_server_rclcpp_node:
   ros__parameters:

@@ -191,7 +191,7 @@ def launch_setup(context, *args, **kwargs):
                 'Grid/Sensor': '0',                       # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
                 'Grid/RangeMin': '0.0',
                 'Grid/RangeMax': '100.0',
-                'Grid/CellSize': '0.15',
+                'Grid/CellSize': '0.125',
                 'Grid/MapFrameProjection': 'true',
                 'Grid/NormalsSegmentation': 'true',
                 'Grid/MaxObstacleHeight': '5.0',
