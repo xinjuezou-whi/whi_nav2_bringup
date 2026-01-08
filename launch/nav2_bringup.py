@@ -38,6 +38,7 @@ def generate_launch_description():
     use_rtabmap = LaunchConfiguration('use_rtabmap')
     db_file = LaunchConfiguration('db_file')
     use_ekf = LaunchConfiguration("use_ekf")
+    vehicle = LaunchConfiguration("vehicle")
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
     autostart = LaunchConfiguration('autostart')
@@ -110,6 +111,10 @@ def generate_launch_description():
     declare_use_ekf_cmd = DeclareLaunchArgument(
         'use_ekf',
         description='Use ekf to fuse localizationd')
+
+    declare_vehicle_cmd = DeclareLaunchArgument(
+        'vehicle', default_value='L1',
+        description='the mobile robot series')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -191,6 +196,7 @@ def generate_launch_description():
                               'use_respawn': use_respawn,
                               'container_name': 'nav2_container',
                               'use_ekf': use_ekf,
+                              'vehicle': vehicle,
                               'keepout_mask_file': keepout_mask_file,
                             }.items()),
     ])
@@ -209,6 +215,7 @@ def generate_launch_description():
     ld.add_action(declare_use_rtabmap_cmd)
     ld.add_action(declare_db_file_cmd)
     ld.add_action(declare_use_ekf_cmd)
+    ld.add_action(declare_vehicle_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)

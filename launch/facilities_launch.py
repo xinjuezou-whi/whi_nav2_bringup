@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode, ParameterFile
@@ -34,15 +36,19 @@ def generate_launch_description():
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
     use_ekf = LaunchConfiguration("use_ekf")
+    vehicle = LaunchConfiguration("vehicle")
     keepout_mask_file = LaunchConfiguration("keepout_mask_file")
 
-    lifecycle_nodes = ['controller_server',
-                       'smoother_server',
-                       'planner_server',
-                       'behavior_server',
-                       'bt_navigator',
-                       'waypoint_follower',
-                       'velocity_smoother',]
+    lifecycle_nodes = [
+        'controller_server',
+        'smoother_server',
+        'planner_server',
+        'behavior_server',
+        'bt_navigator',
+        'waypoint_follower',
+        'velocity_smoother',
+        'collision_monitor',
+    ]
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
@@ -72,6 +78,20 @@ def generate_launch_description():
 
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
+
+    collision_monitor_params_file = PathJoinSubstitution([
+        get_package_share_directory('whi_nav2_bringup'),
+        'config',
+        ['collision_monitor_params_', vehicle, '.yaml']
+    ])
+
+    configured_collision_monitor_params = ParameterFile(
+        RewrittenYaml(
+            source_file=collision_monitor_params_file,
+            root_key=namespace,
+            param_rewrites=param_substitutions,
+            convert_types=True),
+        allow_substs=True)
 
     declare_namespace_cmd = DeclareLaunchArgument(
         'namespace',
@@ -112,6 +132,10 @@ def generate_launch_description():
         'use_ekf', default_value='true',
         description='Use ekf to fuse localizationd')
 
+    declare_vehicle_cmd = DeclareLaunchArgument(
+        'vehicle', default_value='L1',
+        description='the mobile robot series')
+
     declare_keepout_mask_file_cmd = DeclareLaunchArgument(
         'keepout_mask_file', default_value='',
         description='keepout zone mask file')
@@ -131,7 +155,9 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]
+                remappings=remappings + [
+                    ('cmd_vel', 'cmd_vel_nav')
+                ],
             ),
             Node(
                 package='nav2_smoother',
@@ -142,7 +168,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings
+                remappings=remappings,
             ),
             Node(
                 package='nav2_planner',
@@ -153,7 +179,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings
+                remappings=remappings,
             ),
             Node(
                 package='nav2_behaviors',
@@ -164,7 +190,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings
+                remappings=remappings,
             ),
             Node(
                 package='nav2_bt_navigator',
@@ -175,7 +201,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings
+                remappings=remappings,
             ),
             Node(
                 package='nav2_waypoint_follower',
@@ -197,8 +223,9 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings +
-                        [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel')]
+                remappings=remappings + [
+                    ('cmd_vel', 'cmd_vel_nav'),
+                ],
             ),
             Node(
                 condition=IfCondition(use_keepout_zones),
@@ -225,6 +252,13 @@ def generate_launch_description():
                 remappings=remappings,
             ),
             Node(
+                package='nav2_collision_monitor',
+                executable='collision_monitor',
+                output='screen',
+                emulate_tty=True,  # https://github.com/ros2/launch/issues/188
+                parameters=[configured_collision_monitor_params],
+            ),
+            Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
                 name='lifecycle_manager_navigation',
@@ -232,7 +266,8 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[{'use_sim_time': use_sim_time},
                             {'autostart': autostart},
-                            {'node_names': lifecycle_nodes}]
+                            {'node_names': lifecycle_nodes},
+                ],
             ),
             Node(
                 condition=IfCondition(use_keepout_zones),
@@ -300,8 +335,10 @@ def generate_launch_description():
                 plugin='nav2_velocity_smoother::VelocitySmoother',
                 name='velocity_smoother',
                 parameters=[configured_params],
-                remappings=remappings +
-                           [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel')]),
+                remappings=remappings + [
+                    ('cmd_vel', 'cmd_vel_nav'),
+                ],
+            ),
             ComposableNode(
                 package='nav2_lifecycle_manager',
                 plugin='nav2_lifecycle_manager::LifecycleManager',
@@ -328,6 +365,8 @@ def generate_launch_description():
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     ld.add_action(declare_use_ekf_cmd)
+    ld.add_action(declare_vehicle_cmd)
+    ld.add_action(declare_keepout_mask_file_cmd)
     # Add the actions to launch all of the navigation nodes
     ld.add_action(load_nodes)
     ld.add_action(load_composable_nodes)

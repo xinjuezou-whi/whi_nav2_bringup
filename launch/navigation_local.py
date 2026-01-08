@@ -113,6 +113,7 @@ def launch_setup(context, *args, **kwargs):
             'use_rtabmap': use_rtabmap,
             'db_file': db_file,
             'use_ekf': use_ekf,
+            'vehicle': vehicle,
             'use_sim_time': use_sim_time,
             'params_file': nav2_params_file,
             'use_composition': 'False',
