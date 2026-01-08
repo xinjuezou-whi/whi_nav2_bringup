@@ -62,6 +62,7 @@ def launch_setup(context, *args, **kwargs):
     load_state_file = LaunchConfiguration("load_state_file")
     use_rtabmap = LaunchConfiguration("use_rtabmap")
     db_file = LaunchConfiguration("db_file")
+    keepout_mask_file = LaunchConfiguration("keepout_mask_file")
 
     if local_planner.lower() in ("dwb", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_dwb_{vehicle}.yaml"
@@ -75,7 +76,7 @@ def launch_setup(context, *args, **kwargs):
     nav2_params_file=os.path.join(get_package_share_directory('whi_nav2_bringup'),
         'config', nav2_params_file_name)
 
-    nav2_bringup_launch_file = PathJoinSubstitution([
+    whi_nav2_bringup_launch_file = PathJoinSubstitution([
         FindPackageShare('whi_nav2_bringup'),
         'launch',
         'nav2_bringup.py'
@@ -105,7 +106,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Nodes launching commands
     start_nav2_bringup_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(nav2_bringup_launch_file),
+        PythonLaunchDescriptionSource(whi_nav2_bringup_launch_file),
         launch_arguments={
             'map': map,
             'load_state_file': load_state_file,
@@ -116,6 +117,7 @@ def launch_setup(context, *args, **kwargs):
             'params_file': nav2_params_file,
             'use_composition': 'False',
             'use_respawn': 'False',
+            'keepout_mask_file': keepout_mask_file,
         }.items(),
     )
 
@@ -234,6 +236,9 @@ def generate_launch_description():
             description='Use rtabmap to localizing'),
         DeclareLaunchArgument(
             'db_file', default_value='/home/nvidia/.ros/rtabmap.db',
-            description='Full path to pbstream file to load will trigger cartographer localization'),
+            description='Full path to database file to load will trigger rtabmap localization'),
+        DeclareLaunchArgument(
+            'keepout_mask_file', default_value='',
+            description='Full path to keepout zone file to load'),
         OpaqueFunction(function=launch_setup)
     ])

@@ -28,10 +28,8 @@ from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import ReplaceString, RewrittenYaml
 
 def generate_launch_description():
-    # Get the launch directory
+    # Get the default nav2 directory
     bringup_dir = get_package_share_directory('nav2_bringup')
-    launch_dir = os.path.join(bringup_dir, 'launch')
-
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
@@ -46,6 +44,7 @@ def generate_launch_description():
     use_composition = LaunchConfiguration('use_composition')
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
+    keepout_mask_file = LaunchConfiguration('keepout_mask_file')
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
@@ -137,6 +136,10 @@ def generate_launch_description():
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info',
         description='log level')
+
+    declare_keepout_mask_file_cmd = DeclareLaunchArgument(
+        'keepout_mask_file', default_value='',
+        description='keepout zone mask file')
     
     amcl_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_amcl_launch.py')
     cartographer_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_cartographer_launch.py')
@@ -188,6 +191,7 @@ def generate_launch_description():
                               'use_respawn': use_respawn,
                               'container_name': 'nav2_container',
                               'use_ekf': use_ekf,
+                              'keepout_mask_file': keepout_mask_file,
                             }.items()),
     ])
 
@@ -211,6 +215,7 @@ def generate_launch_description():
     ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
+    ld.add_action(declare_keepout_mask_file_cmd)
 
     # Add the actions to launch all of the navigation nodes
     ld.add_action(bringup_cmd_group)
