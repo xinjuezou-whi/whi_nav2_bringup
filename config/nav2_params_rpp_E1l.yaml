@@ -233,7 +233,7 @@ local_costmap:
       # robot_radius: 0.22
       footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
       plugins: ["obstacle_layer", "inflation_layer", "voxel_layer"]
-      filters: ["keepout_filter"]
+      filters: ["keepout_filter", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -250,9 +250,6 @@ local_costmap:
           marking: True
           observation_persistence: 0.0
           data_type: "LaserScan"
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 1.0
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -277,11 +274,14 @@ local_costmap:
           data_type: "PointCloud2"
       static_layer:
         map_subscribe_transient_local: True
-      always_send_full_costmap: True
       keepout_filter:
         plugin: "nav2_costmap_2d::KeepoutFilter"
         enabled: True
         filter_info_topic: /keepout_costmap_filter_info
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 1.0
+      always_send_full_costmap: True
   local_costmap_client:
     ros__parameters:
       use_sim_time: False
@@ -302,7 +302,7 @@ global_costmap:
       footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
       resolution: 0.1
       plugins: ["static_layer", "obstacle_layer", "inflation_layer", "voxel_layer"]
-      filters: ["keepout_filter"]
+      filters: ["keepout_filter", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -344,14 +344,14 @@ global_costmap:
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 2.0
-      always_send_full_costmap: True
       keepout_filter:
         plugin: "nav2_costmap_2d::KeepoutFilter"
         enabled: True
         filter_info_topic: /keepout_costmap_filter_info
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 2.0
+      always_send_full_costmap: True
   global_costmap_client:
     ros__parameters:
       use_sim_time: False
