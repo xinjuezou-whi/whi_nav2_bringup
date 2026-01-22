@@ -39,6 +39,10 @@ def generate_launch_description():
     vehicle = LaunchConfiguration("vehicle")
     keepout_mask_file = LaunchConfiguration("keepout_mask_file")
 
+    use_keepout_zones = PythonExpression([
+        "True if '", keepout_mask_file, "' != '' else False"
+    ])
+
     lifecycle_nodes = [
         'controller_server',
         'smoother_server',
@@ -66,6 +70,7 @@ def generate_launch_description():
         'odom_topic': PythonExpression([
             "'/odometry/filtered' if '", use_ekf, "' == 'true' else '/odom'"
         ]),
+        'KEEPOUT_ZONE_ENABLED': use_keepout_zones,
     }
 
     configured_params = ParameterFile(
@@ -139,10 +144,6 @@ def generate_launch_description():
     declare_keepout_mask_file_cmd = DeclareLaunchArgument(
         'keepout_mask_file', default_value='',
         description='keepout zone mask file')
-
-    use_keepout_zones = PythonExpression([
-        "True if '", keepout_mask_file, "' != '' else False"
-    ])
 
     load_nodes = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
@@ -267,6 +268,7 @@ def generate_launch_description():
                 parameters=[{'use_sim_time': use_sim_time},
                             {'autostart': autostart},
                             {'node_names': lifecycle_nodes},
+                            {'bond_timeout': 10.0}, # potential: E2
                 ],
             ),
             Node(
@@ -285,6 +287,7 @@ def generate_launch_description():
                             'keepout_costmap_filter_info_server',
                         ]
                     },
+                    {'bond_timeout': 10.0}, # potential: E2
                 ],
             ),
         ]

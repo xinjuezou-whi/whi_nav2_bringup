@@ -168,7 +168,7 @@ def launch_setup(context, *args, **kwargs):
     
     # life cycle nodes
     lifecycle_nodes = [
-        'whi_pose_registration_server',
+        # 'whi_pose_registration_server',
         'whi_nav2_bt_actions_server',
     ]
     start_life_cycle_nodes_cmd = Node(
@@ -194,7 +194,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     launch_nodes = [
-        start_pose_registration_cmd,
+        # start_pose_registration_cmd,
         start_bt_actions_server_cmd,
         start_life_cycle_nodes_cmd,
         start_whi_motion_hw_if_cmd,
