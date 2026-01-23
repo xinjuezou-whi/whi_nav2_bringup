@@ -93,6 +93,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Nodes launching commands
     enable_odom = 'false' if icp_odom.lower() == 'true' else 'true'
+    use_ekf = 'false' if icp_odom.lower() == 'true' else 'true'
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={
@@ -243,6 +244,7 @@ def launch_setup(context, *args, **kwargs):
             ('odom', 'icp_odom'),
             ('imu', '/imu_data'),
         ])
+        # parameters['RGBD/NeighborLinkRefining'] = 'false'
     else:
         remappings_rtabmap.extend([
             ('odom', '/odometry/filtered'),
@@ -278,9 +280,10 @@ def launch_setup(context, *args, **kwargs):
                 'odom_frame_id':'icp_odom',
                 'guess_frame_id':'odom',
                 "publish_tf": True,
-                'wait_for_transform': 0.2,
-                'expected_update_rate': 20.0,
+                'wait_for_transform': 2.0,
+                'expected_update_rate': 10.0,
                 'deskewing': False,
+                'deskewing_slerp': True,
                 'use_sim_time': use_sim_time,
                 'sync_queue_size': 30,
                 'topic_queue_size': 30,
