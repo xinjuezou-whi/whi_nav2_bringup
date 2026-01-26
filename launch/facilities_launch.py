@@ -20,7 +20,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
-from launch_ros.actions import LoadComposableNodes
+from launch_ros.actions import LoadComposableNodes, SetParameter
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode, ParameterFile
 from nav2_common.launch import RewrittenYaml
@@ -38,6 +38,7 @@ def generate_launch_description():
     use_ekf = LaunchConfiguration("use_ekf")
     vehicle = LaunchConfiguration("vehicle")
     keepout_mask_file = LaunchConfiguration("keepout_mask_file")
+    graph_file = LaunchConfiguration('graph_file')
 
     use_keepout_zones = PythonExpression([
         "True if '", keepout_mask_file, "' != '' else False"
@@ -47,6 +48,7 @@ def generate_launch_description():
         'controller_server',
         'smoother_server',
         'planner_server',
+        'route_server',
         'behavior_server',
         'bt_navigator',
         'waypoint_follower',
@@ -70,6 +72,8 @@ def generate_launch_description():
         'odom_topic': PythonExpression([
             "'/odometry/filtered' if '", use_ekf, "' == 'true' else '/odom'"
         ]),
+    }
+    value_substitutions = {
         'KEEPOUT_ZONE_ENABLED': use_keepout_zones,
     }
 
@@ -78,6 +82,7 @@ def generate_launch_description():
             source_file=params_file,
             root_key=namespace,
             param_rewrites=param_substitutions,
+            value_rewrites=value_substitutions,
             convert_types=True),
         allow_substs=True)
 
@@ -93,6 +98,20 @@ def generate_launch_description():
     configured_collision_monitor_params = ParameterFile(
         RewrittenYaml(
             source_file=collision_monitor_params_file,
+            root_key=namespace,
+            param_rewrites=param_substitutions,
+            convert_types=True),
+        allow_substs=True)
+
+    route_server_params_file = PathJoinSubstitution([
+        get_package_share_directory('whi_nav2_bringup'),
+        'config',
+        'route_server_params.yaml'
+    ])
+
+    configured_route_server_params = ParameterFile(
+        RewrittenYaml(
+            source_file=route_server_params_file,
             root_key=namespace,
             param_rewrites=param_substitutions,
             convert_types=True),
@@ -143,7 +162,12 @@ def generate_launch_description():
 
     declare_keepout_mask_file_cmd = DeclareLaunchArgument(
         'keepout_mask_file', default_value='',
-        description='keepout zone mask file')
+        description='Full path to the keepout zone mask file to load')
+
+    declare_graph_file_cmd = DeclareLaunchArgument(
+        'graph_file', default_value='',
+        description='Full path to the graph file to load'
+    )
 
     load_nodes = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
@@ -181,6 +205,20 @@ def generate_launch_description():
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings,
+            ),
+            Node(
+                package='nav2_route',
+                executable='route_server',
+                name='route_server',
+                output='screen',
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[
+                    configured_route_server_params,
+                    {'graph_filepath': graph_file}
+                ],
+                arguments=['--ros-args', '--log-level', log_level],
+                remappings=remappings
             ),
             Node(
                 package='nav2_behaviors',
@@ -370,6 +408,7 @@ def generate_launch_description():
     ld.add_action(declare_use_ekf_cmd)
     ld.add_action(declare_vehicle_cmd)
     ld.add_action(declare_keepout_mask_file_cmd)
+    ld.add_action(declare_graph_file_cmd)
     # Add the actions to launch all of the navigation nodes
     ld.add_action(load_nodes)
     ld.add_action(load_composable_nodes)

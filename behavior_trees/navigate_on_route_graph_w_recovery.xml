@@ -1,0 +1,102 @@
+
+<!--
+  This Behavior Tree uses the route server to route the robot through a space
+  and sends the dense path to a controller to follow precisely (pre-smoothing) when
+  the route is invalid or the goal is updated only.
+
+  It will also do first and last mile navigation to the start and end node of the route.
+  While this uses freespace poses, the ComputeRoute will also accept already known NodeIDs
+  if using the route server with known start and target node's locations and not going off graph.
+  It also has recovery actions specific to planning / control as well as general system issues.
+-->
+
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+      <Sequence name="NavigateWithSpinInit">
+        <!-- Step 1: Clear the costmap -->
+        <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+        <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+
+        <!-- Step 2: Compute the first segment path once -->
+        <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
+        <GetPoseFromPath path="{route_path}" index="0" pose="{route_start_pose}"/>
+        <ComputePathToPose goal="{route_start_pose}" path="{path}" planner_id="GridBased"/>
+        <Wait wait_duration="0.5"/>
+
+        <!-- Step 3: Align with that path (atomic with RecoveryNode) -->
+        <RecoveryNode number_of_retries="1" name="SpinAlign">
+          <SpinToPath path="{path}" lookahead_distance="0.3"/>
+          <Sequence name="RecoverySpinAlign">
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+            <Wait wait_duration="0.2"/>
+          </Sequence>
+        </RecoveryNode>
+
+        <PipelineSequence name="NavigateWithReplanning">
+          <RateController hz="2.0" name="ComputeRouteRateController">
+            <RecoveryNode number_of_retries="1" name="ComputeRoute">
+              <Fallback>
+                <!-- Compute a new route if a new goal is found or the path is no longer valid -->
+                <ReactiveSequence>
+                  <Inverter>
+                    <GlobalUpdatedGoal/>
+                  </Inverter>
+                  <IsPathValid path="{path}"/> <!-- Base it on the complete connected 'path', not simply the 'route_path' -->
+                </ReactiveSequence>
+
+                <Sequence name="ComputeAndSmoothRoute">
+                  <!-- Compute the route -->
+                  <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
+
+                  <!-- Find if the route start node is far from the robot's current pose; if so, connect them for 'first mile'. -->
+                  <ReactiveSequence>
+                    <GetCurrentPose current_pose="{current_pose}"/>
+                    <GetPoseFromPath path="{route_path}" index="0" pose="{route_start_pose}"/>
+                    <Inverter>
+                      <ArePosesNear ref_pose="{current_pose}" target_pose="{route_start_pose}" tolerance="0.3"/>
+                    </Inverter>
+                    <ComputePathToPose goal="{route_start_pose}" path="{first_mile_path}" planner_id="GridBased"/>
+                    <ConcatenatePaths input_path1="{first_mile_path}" input_path2="{route_path}" output_path="{route_path}"/>
+                  </ReactiveSequence>
+
+                  <!-- Find if the route end node is far from the goal pose; if so, connect them for 'last mile'. -->
+                  <ReactiveSequence>
+                    <GetPoseFromPath path="{route_path}" index="-1" pose="{route_end_pose}"/>
+                    <Inverter>
+                      <ArePosesNear ref_pose="{goal}" target_pose="{route_end_pose}" tolerance="0.1"/>
+                    </Inverter>
+                    <ComputePathToPose start="{route_end_pose}" goal="{goal}" path="{last_mile_path}" planner_id="GridBased"/>
+                    <ConcatenatePaths input_path1="{route_path}" input_path2="{last_mile_path}" output_path="{route_path}"/>
+                  </ReactiveSequence>
+
+                  <!-- Smooth the completed route -->
+                  <SmoothPath unsmoothed_path="{route_path}" smoothed_path="{path}" smoother_id="route_smoother"/>
+                </Sequence>
+              </Fallback>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+            </RecoveryNode>
+          </RateController>
+
+          <RecoveryNode number_of_retries="1" name="FollowPath">
+            <FollowPath path="{path}" controller_id="FollowPath"/>
+            <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+          </RecoveryNode>
+        </PipelineSequence>
+      </Sequence>
+
+      <ReactiveFallback name="RecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="RecoveryActions">
+          <Sequence name="ClearingActions">
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </Sequence>
+          <Wait wait_duration="2.0"/>
+          <BackUp backup_dist="0.20" backup_speed="0.05"/>
+        </RoundRobin>
+      </ReactiveFallback>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

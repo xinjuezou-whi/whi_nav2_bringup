@@ -52,7 +52,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Input parameters declaration
     # evaluate substitutions at runtime
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_sim_time = LaunchConfiguration('use_sim_time')
     use_stamped_vel = LaunchConfiguration('use_stamped_vel')
     vehicle = LaunchConfiguration("vehicle").perform(context)
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
@@ -63,6 +63,7 @@ def launch_setup(context, *args, **kwargs):
     use_rtabmap = LaunchConfiguration("use_rtabmap")
     db_file = LaunchConfiguration("db_file")
     keepout_mask_file = LaunchConfiguration("keepout_mask_file")
+    graph_file = LaunchConfiguration('graph_file')
 
     if local_planner.lower() in ("dwb", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_dwb_{vehicle}.yaml"
@@ -119,6 +120,7 @@ def launch_setup(context, *args, **kwargs):
             'use_composition': 'False',
             'use_respawn': 'False',
             'keepout_mask_file': keepout_mask_file,
+            'graph_file': graph_file,
         }.items(),
     )
 
@@ -240,6 +242,9 @@ def generate_launch_description():
             description='Full path to database file to load will trigger rtabmap localization'),
         DeclareLaunchArgument(
             'keepout_mask_file', default_value='',
-            description='Full path to keepout zone file to load'),
+            description='Full path to the keepout zone file to load'),
+        DeclareLaunchArgument(
+            'graph_file', default_value='',
+            description='Full path to the graph file to load'),
         OpaqueFunction(function=launch_setup)
     ])

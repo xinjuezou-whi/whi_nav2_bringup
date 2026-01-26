@@ -197,9 +197,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 96
+      Max Intensity: 115
       Min Color: 0; 0; 0
-      Min Intensity: 14
+      Min Intensity: 12
       Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
@@ -231,7 +231,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 174
+      Max Intensity: 144
       Min Color: 0; 0; 0
       Min Intensity: 1
       Name: PointCloud2
@@ -579,7 +579,7 @@ Visualization Manager:
       Name: Realsense
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
-      Name: MarkerArray
+      Name: Waypoints
       Namespaces:
         {}
       Topic:
@@ -588,6 +588,19 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /waypoints
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Route
+      Namespaces:
+        route_graph: true
+        route_graph_ids: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /route_graph
       Value: true
     - Angle Tolerance: 0.10000000149011612
       Class: rviz_default_plugins/Odometry
@@ -776,7 +789,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: -1.9950004816055298
+      Angle: -1.990000605583191
       Class: rviz_default_plugins/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -786,11 +799,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 46.33039093017578
+      Scale: 41.21326446533203
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
-      X: 2.94386887550354
-      Y: 4.248273849487305
+      X: 3.001194715499878
+      Y: 2.6154277324676514
     Saved: ~
 Window Geometry:
   Displays:
