@@ -51,7 +51,7 @@ def launch_setup(context, *args, **kwargs):
         'Grid/Sensor': '0',                       # 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
         'Grid/RangeMin': '0.5',
         'Grid/RangeMax': '100.0',
-        'Grid/CellSize': '0.05',
+        'Grid/CellSize': '0.1',
         'Grid/MapFrameProjection': 'false',       # from Mathieu
         'Grid/NormalsSegmentation': 'false',      # ************************ trying
         'Grid/MaxObstacleHeight': '5.0',
@@ -114,6 +114,7 @@ def launch_setup(context, *args, **kwargs):
         # odometry
         'Odom/Strategy': '0',                     # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D
         'Odom/Holonomic': 'false',                # ************************ trying
+        'Odom/FilteringStrategy': '2',            # ************************ trying
         # 'Odom/ScanKeyFrameThr': '0.8',            # from Mathieu
         # 'OdomF2M/ScanMaxSiz': '15000',            # from Mathieu
         'OdomF2M/ScanSubtractRadius': '0.15',     # Radius used to filter points of a new added scan to local map. This could match the voxel size of the scans
