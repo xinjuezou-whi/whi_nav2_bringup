@@ -150,6 +150,18 @@ def launch_setup(context, *args, **kwargs):
         }.items()
     )
 
+    # range sensors
+    range_sensor_params_file=os.path.join(get_package_share_directory('whi_range_sensors'),
+        'config', 'config.yaml')
+
+    start_range_sensors_cmd = Node(
+        package='whi_range_sensors',
+        executable='whi_range_sensors_node',
+        name='whi_range_sensors',
+        parameters=[range_sensor_params_file],
+        output='screen'
+    )
+
     # pose registration
     start_pose_registration_cmd = Node(
         package='whi_pose_registration_server',
@@ -202,6 +214,7 @@ def launch_setup(context, *args, **kwargs):
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
         start_rslidar_cmd,
+        start_range_sensors_cmd,
         start_nav2_bringup_cmd,
         start_rviz_cmd
     ]
