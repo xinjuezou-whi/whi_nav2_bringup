@@ -35,7 +35,7 @@
         </RecoveryNode>
 
         <PipelineSequence name="NavigateWithReplanning">
-          <RateController hz="2.0" name="ComputeRouteRateController">
+          <RateController hz="0.5" name="ComputeRouteRateController">
             <RecoveryNode number_of_retries="1" name="ComputeRoute">
               <Fallback>
                 <!-- Compute a new route if a new goal is found or the path is no longer valid -->
