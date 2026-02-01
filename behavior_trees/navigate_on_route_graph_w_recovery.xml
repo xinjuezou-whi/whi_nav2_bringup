@@ -17,16 +17,19 @@
         <!-- Step 1: Clear the costmap -->
         <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
         <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+        <Wait wait_duration="0.2"/>
 
         <!-- Step 2: Compute the first segment path once -->
         <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
-        <GetPoseFromPath path="{route_path}" index="0" pose="{route_start_pose}"/>
-        <ComputePathToPose goal="{route_start_pose}" path="{path}" planner_id="GridBased"/>
-        <Wait wait_duration="0.5"/>
+        <GetPoseFromPath path="{route_path}" index="0" pose="{route_start_pose_spin}"/>
+        <ComputePathToPose goal="{route_start_pose_spin}" path="{path_spin}" planner_id="GridBased"/>
 
         <!-- Step 3: Align with that path (atomic with RecoveryNode) -->
         <RecoveryNode number_of_retries="1" name="SpinAlign">
-          <SpinToPath path="{path}" lookahead_distance="0.3"/>
+          <Sequence name="Spin_to_path">
+            <SpinToPath path="{path_spin}" lookahead_distance="0.3"/>
+            <Wait wait_duration="0.2"/>
+          </Sequence>
           <Sequence name="RecoverySpinAlign">
             <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
             <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
@@ -55,7 +58,7 @@
                     <GetCurrentPose current_pose="{current_pose}"/>
                     <GetPoseFromPath path="{route_path}" index="0" pose="{route_start_pose}"/>
                     <Inverter>
-                      <ArePosesNear ref_pose="{current_pose}" target_pose="{route_start_pose}" tolerance="0.3"/>
+                      <ArePosesNear ref_pose="{current_pose}" target_pose="{route_start_pose}" tolerance="0.1"/>
                     </Inverter>
                     <ComputePathToPose goal="{route_start_pose}" path="{first_mile_path}" planner_id="GridBased"/>
                     <ConcatenatePaths input_path1="{first_mile_path}" input_path2="{route_path}" output_path="{route_path}"/>
