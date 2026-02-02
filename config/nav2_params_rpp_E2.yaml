@@ -127,6 +127,7 @@ bt_navigator:
     - nav2_are_poses_near_condition_bt_node
     - whi_nav2_pose_registration_action_bt_node
     - whi_nav2_spin_to_path_action_bt_node
+    - whi_nav2_concatenate_paths_with_arc_action_bt_node
 
 bt_navigator_rclcpp_node:
   ros__parameters:
