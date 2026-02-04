@@ -13,12 +13,14 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import RewrittenYaml
+from launch_ros.substitutions import FindPackageShare
 
 def launch_setup(context, *args, **kwargs):
     # Input parameters declaration
@@ -128,16 +130,16 @@ def launch_setup(context, *args, **kwargs):
     }
 
     remappings_rtabmap= [
-        ('scan_cloud', '/rslidar_points'),
-        # ('imu', '/imu_data'),
+        ('scan_cloud', 'rslidar_points'),
+        # ('imu', 'imu_data'),
     ]
 
     if rgb.lower() in ("true", "1"): # in case it is a string:
         parameters['subscribe_rgb']=True
         parameters['Reg/Strategy']='2'
         remappings_rtabmap.extend([
-            ('rgb/camera_info', '/camera_info'),
-            ('rgb/image', '/image_raw'),
+            ('rgb/camera_info', 'camera_info'),
+            ('rgb/image', 'image_raw'),
         ])
 
     # with no fuse
@@ -147,18 +149,20 @@ def launch_setup(context, *args, **kwargs):
     #     ])
     # else:
     #     remappings_rtabmap.extend([
-    #         ('odom', '/odometry/filtered'),
+    #         ('odom', 'odometry/filtered'),
     #     ])
 
     # RGB camera
-    start_usb_cam_cmd = Node(
-        package='usb_cam',
-        executable='usb_cam_node_exe',
-        name='usb_cam',
-        output='screen',
-        parameters=[
-            '/home/nvidia/ros2_ws/src/usb_cam/config/params_hik.yaml'
-        ],
+    usb_cam_launch_file = PathJoinSubstitution([
+        FindPackageShare('usb_cam'),
+        'launch',
+        'launch.py'
+    ])
+    start_usb_cam_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(usb_cam_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+        }.items(),
         condition=IfCondition(LaunchConfiguration("rgb")),
     )
 
@@ -183,6 +187,7 @@ def launch_setup(context, *args, **kwargs):
 
     # obstacles_detection
     start_rtabmap_obstacle_detection_cmd = Node(
+        namespace=namespace,
         package='rtabmap_util', executable='obstacles_detection', output='screen',
         parameters=[
             {
@@ -200,12 +205,13 @@ def launch_setup(context, *args, **kwargs):
             }
         ],
         remappings=[
-            ('cloud', '/rslidar_points'),
+            ('cloud', 'rslidar_points'),
         ],
     )
     
     # SLAM
     start_rtabmap_slam_cmd = Node(
+        namespace=namespace,
         package='rtabmap_slam', executable='rtabmap', output='screen',
         parameters=[
             parameters,
@@ -219,7 +225,7 @@ def launch_setup(context, *args, **kwargs):
             }
         ],
         remappings=remappings_rtabmap + [
-            ('odom', '/odometry/filtered'), # with fuse
+            ('odom', 'odometry/filtered'), # with fuse
         ],
     )
 

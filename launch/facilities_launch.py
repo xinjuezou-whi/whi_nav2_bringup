@@ -62,15 +62,17 @@ def generate_launch_description():
     # https://github.com/ros/robot_state_publisher/pull/30
     # TODO(orduno) Substitute with `PushNodeRemapping`
     #              https://github.com/ros2/launch_ros/issues/56
-    remappings = [('/tf', 'tf'),
-                  ('/tf_static', 'tf_static')]
+    remappings = [
+        # ('/tf', 'tf'),
+        # ('/tf_static', 'tf_static'),
+    ]
 
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {
         'use_sim_time': use_sim_time,
         'autostart': autostart,
         'odom_topic': PythonExpression([
-            "'/odometry/filtered' if '", use_ekf, "' == 'true' else '/odom'"
+            "'odometry/filtered' if '", use_ekf, "' == 'true' else 'odom'"
         ]),
     }
     value_substitutions = {
@@ -175,6 +177,7 @@ def generate_launch_description():
             Node(
                 package='nav2_controller',
                 executable='controller_server',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -188,6 +191,7 @@ def generate_launch_description():
                 package='nav2_smoother',
                 executable='smoother_server',
                 name='smoother_server',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -199,6 +203,7 @@ def generate_launch_description():
                 package='nav2_planner',
                 executable='planner_server',
                 name='planner_server',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -210,6 +215,7 @@ def generate_launch_description():
                 package='nav2_route',
                 executable='route_server',
                 name='route_server',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -224,6 +230,7 @@ def generate_launch_description():
                 package='nav2_behaviors',
                 executable='behavior_server',
                 name='behavior_server',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -234,6 +241,7 @@ def generate_launch_description():
             Node(
                 package='nav2_bt_navigator',
                 executable='bt_navigator',
+                namespace=namespace,
                 name='bt_navigator',
                 output='screen',
                 respawn=use_respawn,
@@ -246,6 +254,7 @@ def generate_launch_description():
                 package='nav2_waypoint_follower',
                 executable='waypoint_follower',
                 name='waypoint_follower',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -257,6 +266,7 @@ def generate_launch_description():
                 package='nav2_velocity_smoother',
                 executable='velocity_smoother',
                 name='velocity_smoother',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -271,6 +281,7 @@ def generate_launch_description():
                 package='nav2_map_server',
                 executable='map_server',
                 name='keepout_filter_mask_server',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -283,6 +294,7 @@ def generate_launch_description():
                 package='nav2_map_server',
                 executable='costmap_filter_info_server',
                 name='keepout_costmap_filter_info_server',
+                namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
@@ -293,6 +305,7 @@ def generate_launch_description():
             Node(
                 package='nav2_collision_monitor',
                 executable='collision_monitor',
+                namespace=namespace,
                 output='screen',
                 emulate_tty=True,  # https://github.com/ros2/launch/issues/188
                 parameters=[configured_collision_monitor_params],
@@ -301,6 +314,7 @@ def generate_launch_description():
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
                 name='lifecycle_manager_navigation',
+                namespace=namespace,
                 output='screen',
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[{'use_sim_time': use_sim_time},
@@ -314,6 +328,7 @@ def generate_launch_description():
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
                 name='lifecycle_manager_keepout_zone',
+                namespace=namespace,
                 output='screen',
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[

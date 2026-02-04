@@ -19,8 +19,10 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
+from launch_ros.descriptions import ParameterFile
+from nav2_common.launch import RewrittenYaml
 from launch_ros.substitutions import FindPackageShare
 import subprocess
 
@@ -52,7 +54,11 @@ def launch_setup(context, *args, **kwargs):
 
     # Input parameters declaration
     # evaluate substitutions at runtime
+    namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    autostart = LaunchConfiguration('autostart')
+    use_composition = LaunchConfiguration('use_composition')
+    use_respawn = LaunchConfiguration('use_respawn')
     use_stamped_vel = LaunchConfiguration('use_stamped_vel')
     vehicle = LaunchConfiguration("vehicle").perform(context)
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
@@ -76,6 +82,18 @@ def launch_setup(context, *args, **kwargs):
 
     nav2_params_file=os.path.join(get_package_share_directory('whi_nav2_bringup'),
         'config', nav2_params_file_name)
+
+    param_substitutions = {
+        'use_sim_time': use_sim_time,
+    }
+
+    configured_nav2_params = ParameterFile(
+        RewrittenYaml(
+            source_file=nav2_params_file,
+            root_key=namespace,
+            param_rewrites=param_substitutions,
+            convert_types=True),
+        allow_substs=True)
 
     whi_nav2_bringup_launch_file = PathJoinSubstitution([
         FindPackageShare('whi_nav2_bringup'),
@@ -101,64 +119,70 @@ def launch_setup(context, *args, **kwargs):
         'start.py'
     ])
 
+    # navigation related
+    amcl_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_amcl_launch.py')
+    cartographer_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_cartographer_launch.py')
+    rtabmap_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_rtabmap_launch.py')
+    
+    facilities_launch_file = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'facilities_launch.py')
+    localization_launch_file = PythonExpression([
+        '"', cartographer_path, '" if "', LaunchConfiguration('load_state_file'),
+        '" != "" else ( "', rtabmap_path, '" if "', LaunchConfiguration('use_rtabmap'), '" == "true" else "', amcl_path, '" )'
+    ])
+
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("whi_nav2_bringup"), "launch", "config_nav2.rviz"]
-    )
-
-    # Nodes launching commands
-    start_nav2_bringup_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(whi_nav2_bringup_launch_file),
-        launch_arguments={
-            'map': map,
-            'load_state_file': load_state_file,
-            'use_rtabmap': use_rtabmap,
-            'db_file': db_file,
-            'use_ekf': use_ekf,
-            'vehicle': vehicle,
-            'use_sim_time': use_sim_time,
-            'params_file': nav2_params_file,
-            'use_composition': 'False',
-            'use_respawn': 'False',
-            'keepout_mask_file': keepout_mask_file,
-            'graph_file': graph_file,
-        }.items(),
+        # [FindPackageShare("whi_nav2_bringup"), "launch", "config_nav2_multiple.rviz"] # for multiple demo
     )
 
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={
+            'namespace': namespace,
             'use_stamped_vel': use_stamped_vel,
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
             'use_ekf': use_ekf
-        }.items()
+        }.items(),
     )
 
     # LiDAR
     start_lakibeam1_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(lidar_lakibeam1_launch_file),
         launch_arguments={
+            'namespace': namespace,
             'frame_id': 'laser',
             'output_topic0': 'scan',
-        }.items()
+        }.items(),
     )
 
     start_rslidar_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(lidar_rslidar_launch_file),
         launch_arguments={
+            'namespace': namespace,
             'start_rviz': 'false',
-        }.items()
+        }.items(),
     )
 
     # range sensors
     range_sensor_params_file=os.path.join(get_package_share_directory('whi_range_sensors'),
         'config', 'config.yaml')
+    configured_range_sensors_params = ParameterFile(
+        RewrittenYaml(
+            source_file=range_sensor_params_file,
+            root_key=namespace,
+            param_rewrites={},
+            convert_types=True,
+        ),
+        allow_substs=True,
+    )
 
     start_range_sensors_cmd = Node(
         package='whi_range_sensors',
         executable='whi_range_sensors_node',
         name='whi_range_sensors',
-        parameters=[range_sensor_params_file],
+        namespace=namespace,
+        parameters=[configured_range_sensors_params],
         output='screen'
     )
 
@@ -167,7 +191,8 @@ def launch_setup(context, *args, **kwargs):
         package='whi_pose_registration_server',
         executable='whi_pose_registration_server',
         name='whi_pose_registration_server',
-        parameters=[nav2_params_file],
+        namespace=namespace,
+        parameters=[configured_nav2_params],
         output='screen'
     )
 
@@ -176,7 +201,8 @@ def launch_setup(context, *args, **kwargs):
         package='whi_nav2_bt_actions_server',
         executable='whi_nav2_bt_actions_server',
         name='whi_nav2_bt_actions_server',
-        parameters=[nav2_params_file],
+        namespace=namespace,
+        parameters=[configured_nav2_params],
         output='screen'
     )
     
@@ -189,12 +215,48 @@ def launch_setup(context, *args, **kwargs):
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
         name='lifecycle_manager_whi',
+        namespace=namespace,
         output='screen',
         parameters=[
             {'use_sim_time': use_sim_time},
-            {'autostart': True},
+            {'autostart': autostart},
             {'node_names': lifecycle_nodes}
         ]
+    )
+
+    # navigation launching commands
+    start_localization_cmd = IncludeLaunchDescription(
+        localization_launch_file,
+        launch_arguments={
+            'namespace': namespace,
+            'map': map,
+            'load_state_file': load_state_file,
+            'db_file': db_file,
+            'use_ekf': use_ekf,
+            'use_sim_time': use_sim_time,
+            'autostart': autostart,
+            'params_file': nav2_params_file,
+            'use_composition': use_composition,
+            'use_respawn': use_respawn,
+            'container_name': 'nav2_container',
+        }.items(),
+    )
+
+    start_nav2_facilities_cmd = IncludeLaunchDescription(
+        facilities_launch_file,
+        launch_arguments={
+            'namespace': namespace,
+            'use_sim_time': use_sim_time,
+            'autostart': autostart,
+            'params_file': nav2_params_file,
+            'use_composition': use_composition,
+            'use_respawn': use_respawn,
+            'container_name': 'nav2_container',
+            'use_ekf': use_ekf,
+            'vehicle': vehicle,
+            'keepout_mask_file': keepout_mask_file,
+            'graph_file': graph_file,
+        }.items(),
     )
     
     # rviz visualization
@@ -202,6 +264,7 @@ def launch_setup(context, *args, **kwargs):
         package='rviz2',
         executable='rviz2',
         name='rviz2',
+        namespace=namespace,
         arguments=['-d', rviz_config_file],
         parameters=[{'use_sim_time': use_sim_time}],
         output='screen'
@@ -215,7 +278,8 @@ def launch_setup(context, *args, **kwargs):
         start_lakibeam1_cmd,
         start_rslidar_cmd,
         start_range_sensors_cmd,
-        start_nav2_bringup_cmd,
+        start_localization_cmd,
+        start_nav2_facilities_cmd,
         start_rviz_cmd
     ]
 
@@ -224,10 +288,22 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
+            'namespace', default_value='',
+            description='Top-level namespace'),
+        DeclareLaunchArgument(
             'use_sim_time', default_value='false',
             description='Use simulation (Gazebo) clock if true'),
         DeclareLaunchArgument(
-            'use_stamped_vel', default_value='false', # false for foxy
+            'autostart', default_value='true',
+            description='Automatically startup the nav2 stack'),
+        DeclareLaunchArgument(
+            'use_composition', default_value='False',
+            description='Whether to use composed bringup'),
+        DeclareLaunchArgument(
+            'use_respawn', default_value='True',
+            description='Whether to respawn if a node crashes. Applied when composition is disabled'),
+        DeclareLaunchArgument(
+            'use_stamped_vel', default_value='False', # False for foxy, humble
             description='Use stamped twist'),
         DeclareLaunchArgument(
             "vehicle", default_value="L1",
