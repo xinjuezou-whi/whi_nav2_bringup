@@ -87,6 +87,11 @@ def launch_setup(context, *args, **kwargs):
         'launch',
         'launch.py'
     ])
+    usb_cam_launch_file = PathJoinSubstitution([
+        FindPackageShare('usb_cam'),
+        'launch',
+        'launch.py'
+    ])
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("whi_nav2_bringup"), "launch", "config_mapping_3d.rviz"]
     )
@@ -97,6 +102,7 @@ def launch_setup(context, *args, **kwargs):
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={
+            'namespace': namespace,
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
             'use_ekf': use_ekf,
@@ -109,26 +115,27 @@ def launch_setup(context, *args, **kwargs):
     start_rslidar_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(lidar_rslidar_launch_file),
         launch_arguments={
+            'namespace': namespace,
             'start_rviz': 'false',
         }.items(),
         condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
 
     # RGB camera
-    start_usb_cam_cam =  Node(
-        package='usb_cam',
-        executable='usb_cam_node_exe',
-        name='usb_cam',
-        output='screen',
-        parameters=[
-            '/home/nvidia/ros2_ws/src/usb_cam/config/params_hik.yaml'
-        ],
+    start_usb_cam_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(usb_cam_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+        }.items(),
         condition=IfCondition(LaunchConfiguration("rgb")),
     )
 
     # landmark utility
     start_whi_qrcode_pose_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_qrcode_pose_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+        }.items(),
         condition=IfCondition(
             PythonExpression([
                 '"', LaunchConfiguration('landmark'), '"', ' == "true" and ',
@@ -139,6 +146,9 @@ def launch_setup(context, *args, **kwargs):
 
     start_whi_landmark_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_landmark_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+        }.items(),
         condition=IfCondition(
             PythonExpression([
                 '"', LaunchConfiguration('landmark'), '"', ' == "true" and ',
@@ -237,25 +247,25 @@ def launch_setup(context, *args, **kwargs):
     }
 
     remappings_rtabmap = [
-        ('scan_cloud', '/rslidar_points'),
-        # ('imu', '/imu_data'),
+        ('scan_cloud', 'rslidar_points'),
+        # ('imu', 'imu_data'),
     ]
     if icp_odom.lower() in ("true", "1"): # in case it is a string
         remappings_rtabmap.extend([
             ('odom', 'icp_odom'),
-            ('imu', '/imu_data'),
+            ('imu', 'imu_data'),
         ])
         # parameters['RGBD/NeighborLinkRefining'] = 'false'
     else:
         remappings_rtabmap.extend([
-            ('odom', '/odometry/filtered'),
+            ('odom', 'odometry/filtered'),
         ])
     if rgb.lower() in ("true", "1"): # in case it is a string
         parameters['subscribe_rgb'] = True
         parameters['Reg/Strategy'] = '2'
         remappings_rtabmap.extend([
-            ('rgb/camera_info', '/camera_info'),
-            ('rgb/image', '/image_raw'),
+            ('rgb/camera_info', 'camera_info'),
+            ('rgb/image', 'image_raw'),
         ])
     if create_dict.lower() in ("true", "1"): # in case it is a string
         parameters['Mem/NotLinkedNodesKept'] = 'false'
@@ -263,7 +273,7 @@ def launch_setup(context, *args, **kwargs):
         parameters['Mem/BinDataKept'] = 'true'
     if fixed_dict.lower() in ("true", "1"): # in case it is a string
         parameters['Kp/IncrementalDictionary'] = 'false'
-        parameters['Kp/DictionaryPath'] = '/home/nvidia/.ros/t_02.db'
+        parameters['Kp/DictionaryPath'] = '/home/nvidia/.ros/dict.db'
     
     if incremental.lower() in ("true", "1"): # in case it is a string
         arguments=[]
@@ -274,6 +284,7 @@ def launch_setup(context, *args, **kwargs):
 
     start_rtabmap_odom_cmd = Node(
         package='rtabmap_odom', executable='icp_odometry', output='screen',
+        namespace=namespace,
         parameters=[
             parameters,
             {
@@ -296,6 +307,7 @@ def launch_setup(context, *args, **kwargs):
 
     start_rtabmap_slam_cmd = Node(
         package='rtabmap_slam', executable='rtabmap', output='screen',
+        namespace=namespace,
         parameters=[
             parameters,
             {
@@ -314,6 +326,7 @@ def launch_setup(context, *args, **kwargs):
     start_map_saver_server_cmd = Node(
         package='nav2_map_server',
         executable='map_saver_server',
+        namespace=namespace,
         output='screen',
         parameters=[
             {'save_map_timeout': 20.0},
@@ -327,6 +340,7 @@ def launch_setup(context, *args, **kwargs):
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
         name='lifecycle_manager_slam',
+        namespace=namespace,
         output='screen',
         parameters=[{'use_sim_time': use_sim_time},
                     {'autostart': autostart},
@@ -351,7 +365,7 @@ def launch_setup(context, *args, **kwargs):
     launch_nodes = [
         start_whi_motion_hw_if_cmd,
         start_rslidar_cmd,
-        start_usb_cam_cam,
+        start_usb_cam_cmd,
         start_whi_qrcode_pose_cmd,
         start_whi_landmark_cmd,
         start_rtabmap_odom_cmd,
