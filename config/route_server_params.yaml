@@ -4,8 +4,8 @@ route_server:
     # If you'd rather set it in the yaml, remove the default "graph" value in the launch file(s).
     # file & provide full path to map below. If graph config or launch default is provided, it is used
     # graph_filepath: $(find-pkg-share nav2_route)/graphs/aws_graph.geojson
-    base_frame: "base_link"
-    route_frame: "map"
+    base_frame: base_link
+    route_frame: map
     path_density: 0.05
     boundary_radius_to_achieve_node: 1.0
     radius_to_achieve_node: 2.0

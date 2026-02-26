@@ -197,29 +197,12 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # bt actions server
-    if LaunchConfiguration("namespace").perform(context) == '':
-        frefix = ''
-    else:
-        frefix = LaunchConfiguration("namespace").perform(context) + '/'
-
-    whi_nav2_bt_action_server_param_substitutions = {
-        'use_sim_time': use_sim_time,
-        'global_frame': [frefix, "odom"],
-        'robot_base_frame': [frefix, "base_link"],
-    }
-    configured_whi_nav2_bt_action_server_params = ParameterFile(
-        RewrittenYaml(
-            source_file=nav2_params_file,
-            root_key=namespace,
-            param_rewrites=whi_nav2_bt_action_server_param_substitutions,
-            convert_types=True),
-        allow_substs=True)
     start_bt_actions_server_cmd = Node(
         package='whi_nav2_bt_actions_server',
         executable='whi_nav2_bt_actions_server',
         name='whi_nav2_bt_actions_server',
         namespace=namespace,
-        parameters=[configured_whi_nav2_bt_action_server_params],
+        parameters=[configured_nav2_params],
         output='screen'
     )
     

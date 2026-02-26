@@ -218,6 +218,7 @@ def launch_setup(context, *args, **kwargs):
             {
                 'use_sim_time': use_sim_time,
                 'frame_id': 'base_link',
+                'map_frame_id': 'map',
                 'odom_frame_id': 'odom',
                 'wait_for_transform': 0.25,
                 'topic_queue_size': 50, # increase from default 10,
