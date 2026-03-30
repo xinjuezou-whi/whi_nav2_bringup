@@ -136,6 +136,7 @@ bt_navigator:
     - whi_nav2_is_robot_idle_condition_bt_node
     - whi_nav2_is_robot_docking_condition_bt_node
     - whi_nav2_is_charging_enough_condition_bt_node
+    - whi_nav2_io_request_action_bt_node
 
 bt_navigator_rclcpp_node:
   ros__parameters:
