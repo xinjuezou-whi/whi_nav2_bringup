@@ -129,6 +129,7 @@ bt_navigator:
     - whi_nav2_spin_to_path_action_bt_node
     - whi_nav2_concatenate_paths_with_arc_action_bt_node
     - whi_nav2_trigger_action_bt_node
+    - whi_nav2_sync_trigger_action_bt_node
     - whi_nav2_follow_object_action_bt_node
     - whi_nav2_cancel_follow_object_action_bt_node
     - whi_nav2_is_robot_idle_condition_bt_node
