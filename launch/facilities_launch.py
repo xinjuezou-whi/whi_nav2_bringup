@@ -54,6 +54,7 @@ def generate_launch_description():
         'waypoint_follower',
         'velocity_smoother',
         'collision_monitor',
+        'whi_nav2_following_server',
     ]
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
@@ -114,6 +115,34 @@ def generate_launch_description():
     configured_route_server_params = ParameterFile(
         RewrittenYaml(
             source_file=route_server_params_file,
+            root_key=namespace,
+            param_rewrites=param_substitutions,
+            convert_types=True),
+        allow_substs=True)
+
+    lidar_docking_params_file = PathJoinSubstitution([
+        get_package_share_directory('whi_nav2_bringup'),
+        'config',
+        'lidar_docking_params.yaml'
+    ])
+
+    configured_lidar_docking_params_file = ParameterFile(
+        RewrittenYaml(
+            source_file=lidar_docking_params_file,
+            root_key=namespace,
+            param_rewrites=param_substitutions,
+            convert_types=True),
+        allow_substs=True)
+
+    following_params_file = PathJoinSubstitution([
+        get_package_share_directory('whi_nav2_bringup'),
+        'config',
+        'following_params.yaml'
+    ])
+
+    configured_following_params_file = ParameterFile(
+        RewrittenYaml(
+            source_file=following_params_file,
             root_key=namespace,
             param_rewrites=param_substitutions,
             convert_types=True),
@@ -309,6 +338,21 @@ def generate_launch_description():
                 output='screen',
                 emulate_tty=True,  # https://github.com/ros2/launch/issues/188
                 parameters=[configured_collision_monitor_params],
+            ),
+            Node(
+                package='whi_nav2_bringup',
+                executable='docking_node.py',
+                name='lidar_docking',
+                parameters=[configured_lidar_docking_params_file],
+                output='screen'
+            ),
+            Node(
+                package='whi_nav2_following',
+                executable='whi_nav2_following',
+                name='whi_nav2_following_server',
+                namespace=namespace,
+                output='screen',
+                parameters=[configured_following_params_file]
             ),
             Node(
                 package='nav2_lifecycle_manager',

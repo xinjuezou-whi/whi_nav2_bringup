@@ -5,62 +5,104 @@
 -->
 <root main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
-    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
-      <Sequence name="NavigateWithSpinInit">
-        <!-- Step 1: Compute a path once -->
-        <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+    <ReactiveFallback name="IdleGuard">
 
-        <!-- Step 2: Align with that path (atomic with RecoveryNode) -->
-        <RecoveryNode number_of_retries="1" name="SpinAlign">
-          <SpinToPath path="{path}" lookahead_distance="0.3"/>
-          <Sequence name="RecoverySpinAlign">
-            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-            <Wait wait_duration="0.2"/>
+      <Inverter>
+        <!-- use ';' to separate the multiple devices -->
+        <IsRobotIdle state_topic="whi_state" device_ids="whi_motion_hw_interface;whi_battery_monitor" battery_state_service="battery_state"/>
+      </Inverter>
+
+      <Sequence name="NavigateWithInDockGuard ">
+
+        <Fallback  name="IsInDockGuard">
+          <Inverter>
+            <IsChargingEnough state_service="battery_state"/>
+          </Inverter>
+
+          <Sequence name="UndockSequence">
+            <IoRequest io_service="modbus_io_request" addr="17" operation="1" value="0"/>
+            <Wait wait_duration="1.0"/>
+            <BackUp backup_dist="0.5" backup_speed="0.15"/>
           </Sequence>
+        </Fallback>
+
+        <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+          <Sequence name="NavigateWithSpinInit">
+            <!-- Step 1: Compute a path once -->
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+
+            <!-- Step 2: Align with that path (atomic with RecoveryNode) -->
+            <RecoveryNode number_of_retries="1" name="SpinAlign">
+              <SpinToPath path="{path}" lookahead_distance="0.3"/>
+              <Sequence name="RecoverySpinAlign">
+                <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                <Wait wait_duration="0.2"/>
+              </Sequence>
+            </RecoveryNode>
+
+            <!-- Step 3: consistant replanning and if path becomes invalid -->
+            <PipelineSequence name="NavigateWithReplanning">
+              <RateController hz="2.0">
+                <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+                  <Fallback>
+                    <ReactiveSequence>
+                      <Inverter>
+                        <PathExpiringTimer seconds="10" path="{path}"/>
+                      </Inverter>
+                      <Inverter>
+                        <GlobalUpdatedGoal/>
+                      </Inverter>
+                      <IsPathValid path="{path}"/>
+                    </ReactiveSequence>
+
+                    <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+                  </Fallback>
+                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                </RecoveryNode>
+              </RateController>
+
+              <RecoveryNode number_of_retries="1" name="FollowPath">
+                <FollowPath path="{path}" controller_id="FollowPath"/>
+                <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+              </RecoveryNode>
+            </PipelineSequence>
+
+            <!-- docking -->
+            <Fallback  name="DockingGuard">
+              <Inverter>
+                <IsRobotDocking state_service="battery_state"/>
+              </Inverter>
+
+              <Sequence name="DockingSequence">
+                <IoRequest io_service="modbus_io_request" addr="17" operation="1" value="1"/>
+                <SyncTrigger trigger_service="docking_trigger" value="true"/>
+                <Wait wait_duration="1.0"/>
+                <FollowObjectExt pose_topic="detected_dynamic_pose" continuous="false" total_elapsed_time="{elapsed_time}"/>
+                <SyncTrigger trigger_service="docking_trigger" value="false"/>
+                <CancelFollowObjectExt/>
+              </Sequence>
+            </Fallback>
+
+          </Sequence>
+
+          <!-- recovery actions -->
+          <ReactiveFallback name="RecoveryFallback">
+            <GoalUpdated/>
+            <RoundRobin name="RecoveryActions">
+              <Sequence name="ClearingActions">
+                <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+                <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+              </Sequence>
+              <Spin spin_dist="1.57"/>
+              <Wait wait_duration="2.0"/>
+              <BackUp backup_dist="0.30" backup_speed="0.05"/>
+            </RoundRobin>
+          </ReactiveFallback>
         </RecoveryNode>
 
-        <!-- Step 3: consistant replanning and if path becomes invalid -->
-        <PipelineSequence name="NavigateWithReplanning">
-          <RateController hz="2.0">
-            <RecoveryNode number_of_retries="1" name="ComputePathToPose">
-              <Fallback>
-                <ReactiveSequence>
-                  <Inverter>
-                    <PathExpiringTimer seconds="10" path="{path}"/>
-                  </Inverter>
-                  <Inverter>
-                    <GlobalUpdatedGoal/>
-                  </Inverter>
-                  <IsPathValid path="{path}"/>
-                </ReactiveSequence>
-
-                <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
-              </Fallback>
-              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-            </RecoveryNode>
-          </RateController>
-
-          <RecoveryNode number_of_retries="1" name="FollowPath">
-            <FollowPath path="{path}" controller_id="FollowPath"/>
-            <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
-          </RecoveryNode>
-        </PipelineSequence>
       </Sequence>
 
-      <!-- recovery actions -->
-      <ReactiveFallback name="RecoveryFallback">
-        <GoalUpdated/>
-        <RoundRobin name="RecoveryActions">
-          <Sequence name="ClearingActions">
-            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
-          </Sequence>
-          <Spin spin_dist="1.57"/>
-          <Wait wait_duration="2"/>
-          <BackUp backup_dist="0.30" backup_speed="0.05"/>
-        </RoundRobin>
-      </ReactiveFallback>
-    </RecoveryNode>
+    </ReactiveFallback>
   </BehaviorTree>
 </root>

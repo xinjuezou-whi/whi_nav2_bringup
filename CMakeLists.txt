@@ -22,8 +22,13 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 install(
-  DIRECTORY config launch behavior_trees
+  DIRECTORY config launch behavior_trees data
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  scripts/docking_node.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
