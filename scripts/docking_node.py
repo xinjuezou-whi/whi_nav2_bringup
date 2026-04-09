@@ -30,6 +30,9 @@ class LidarDockingNode(Node):
     def __init__(self):
         super().__init__('lidar_docking')
 
+        print("WHI Sync Trigger bt node VERSION 00.01.1")
+        print("Copyright © 2026-2027 Wheel Hub Intelligent Co.,Ltd. All rights reserved")
+
         # --- params ---
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('target_frame', 'odom')
