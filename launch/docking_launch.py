@@ -66,11 +66,12 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         arguments=["-d", rviz_config_file],
+        output='screen'
     )
 
     return LaunchDescription([
         whi_hardware,
         start_lakibeam1_cmd,
         docking_node,
-        # rviz_node
+        rviz_node
     ])
