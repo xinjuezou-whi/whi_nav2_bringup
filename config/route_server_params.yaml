@@ -11,6 +11,8 @@ route_server:
     radius_to_achieve_node: 2.0
     smooth_corners: true
     smoothing_radius: 1.0
+    min_prune_dist_from_start: 0.2
+    min_prune_dist_from_goal: 0.5
     operations: ["AdjustSpeedLimit", "ReroutingService", "CollisionMonitor"]
     ReroutingService:
       plugin: "nav2_route::ReroutingService"
