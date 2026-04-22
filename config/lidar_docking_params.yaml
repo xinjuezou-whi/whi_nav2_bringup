@@ -2,7 +2,7 @@ lidar_docking:
   ros__parameters:
     base_frame: base_link
     target_frame: odom
-    template_file: dock_template_130.pcd #dock_template_sym.pcd
+    template_file: dock_template_120.pcd #dock_template_130.pcd #dock_template_sym.pcd
     dock_template_sym.pcd:
       normal_angle: 90.0
       side_length: 0.12
@@ -10,6 +10,10 @@ lidar_docking:
     dock_template_130.pcd:
       normal_angle: 130.0
       side_length: 0.11
+      downsample_size: 0.01
+    dock_template_120.pcd:
+      normal_angle: 130.0
+      side_length: 0.117
       downsample_size: 0.01
     debug:
       visualize: false
