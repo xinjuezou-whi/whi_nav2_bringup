@@ -54,6 +54,7 @@ def generate_launch_description():
         'waypoint_follower',
         'velocity_smoother',
         'collision_monitor',
+        'whi_nav2_bt_actions_server',
         'whi_nav2_following_server',
     ]
 
@@ -203,6 +204,7 @@ def generate_launch_description():
     load_nodes = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
         actions=[
+            SetParameter('use_sim_time', use_sim_time),
             Node(
                 package='nav2_controller',
                 executable='controller_server',
@@ -344,15 +346,23 @@ def generate_launch_description():
                 executable='docking_node.py',
                 name='lidar_docking',
                 parameters=[configured_lidar_docking_params_file],
-                output='screen'
+                output='screen',
             ),
             Node(
                 package='whi_nav2_following',
                 executable='whi_nav2_following',
                 name='whi_nav2_following_server',
                 namespace=namespace,
+                parameters=[configured_following_params_file],
                 output='screen',
-                parameters=[configured_following_params_file]
+            ),
+            Node(
+                package='whi_nav2_bt_actions_server',
+                executable='whi_nav2_bt_actions_server',
+                name='whi_nav2_bt_actions_server',
+                namespace=namespace,
+                parameters=[configured_params],
+                output='screen',
             ),
             Node(
                 package='nav2_lifecycle_manager',
@@ -364,7 +374,7 @@ def generate_launch_description():
                 parameters=[{'use_sim_time': use_sim_time},
                             {'autostart': autostart},
                             {'node_names': lifecycle_nodes},
-                            {'bond_timeout': 10.0}, # potential: E2
+                            {'bond_timeout': 15.0}, # potential: E2
                 ],
             ),
             Node(

@@ -17,17 +17,17 @@ collision_monitor:
     polygons: ["PolygonStop", "PolygonSlow"]
     PolygonStop:
       type: "polygon"
-      points: [0.768, 0.47, 0.768, -0.47, -0.768, -0.47, -0.768, 0.47]
+      points: "[[0.768, 0.47], [0.768, -0.47], [-0.768, -0.47], [-0.768, 0.47]]"
       action_type: "stop"
-      max_points: 3
+      min_points: 4
       visualize: True
       polygon_pub_topic: polygon_stop
       enabled: True
     PolygonSlow:
       type: "polygon"
-      points: [1.068, 0.67, 1.068, -0.67, -1.068, -0.67, -1.068, 0.67]
+      points: "[[1.068, 0.67], [1.068, -0.67], [-1.068, -0.67], [-1.068, 0.67]]"
       action_type: "slowdown"
-      max_points: 3
+      min_points: 4
       slowdown_ratio: 0.3
       visualize: True
       polygon_pub_topic: polygon_slowdown

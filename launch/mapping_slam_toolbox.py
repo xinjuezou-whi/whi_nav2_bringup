@@ -109,15 +109,18 @@ def launch_setup(context, *args, **kwargs):
             'base_frame': 'base_link',
             'scan_topic': 'scan',
             'resolution': '0.05',
+            'use_lifecycle_manager': 'true',
         },
         convert_types=True
     )
+
     start_slam_toolbox_cmd = Node(
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
         name='slam_toolbox',
+        namespace=namespace,
+        parameters=[slam_toolbox_params],
         output='screen',
-        parameters=[slam_toolbox_params]
     )
 
     # map server
@@ -129,7 +132,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # life cycle
-    lifecycle_nodes = ['map_saver']
+    lifecycle_nodes = ['map_saver', 'slam_toolbox']
     start_lifecycle_manager_cmd = Node(
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',

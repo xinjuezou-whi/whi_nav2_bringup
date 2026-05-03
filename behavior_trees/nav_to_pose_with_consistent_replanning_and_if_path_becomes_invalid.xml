@@ -3,7 +3,7 @@
   recovery actions specific to planning / control as well as general system issues.
   This will be continuous if a kinematically valid planner is selected.
 -->
-<root main_tree_to_execute="MainTree">
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
     <ReactiveFallback name="IdleGuard">
 
@@ -36,7 +36,7 @@
               <SpinToPath path="{path}" lookahead_distance="0.3"/>
               <Sequence name="RecoverySpinAlign">
                 <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
                 <Wait wait_duration="0.2"/>
               </Sequence>
             </RecoveryNode>
@@ -44,7 +44,7 @@
             <!-- Step 3: consistant replanning and if path becomes invalid -->
             <PipelineSequence name="NavigateWithReplanning">
               <RateController hz="2.0">
-                <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+                <RecoveryNode number_of_retries="1" name="ComputePathToPoseRecovery">
                   <Fallback>
                     <ReactiveSequence>
                       <Inverter>

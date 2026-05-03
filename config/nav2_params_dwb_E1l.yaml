@@ -14,7 +14,6 @@
 
 amcl:
   ros__parameters:
-    use_sim_time: False
     alpha1: 0.2
     alpha2: 0.2
     alpha3: 0.2
@@ -60,90 +59,62 @@ amcl:
       z: 0.0
       yaw: 0.0
 
-amcl_map_client:
-  ros__parameters:
-    use_sim_time: False
-
-amcl_rclcpp_node:
-  ros__parameters:
-    use_sim_time: False
 
 bt_navigator:
   ros__parameters:
-    use_sim_time: False
     global_frame: map
     robot_base_frame: base_link
     odom_topic: odom
-    default_nav_through_poses_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
-    default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/nav_to_pose_with_consistent_replanning_and_if_path_becomes_invalid.xml"
-    # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_on_route_graph_w_recovery.xml"
-    # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_w_replanning_and_recovery_registration.xml"
-    # default_nav_to_pose_bt_xml: "/home/nvidia/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_plain_with_spin2path.xml"
     bt_loop_duration: 10
     default_server_timeout: 20
-    enable_groot_monitoring: True
-    groot_zmq_publisher_port: 1666
-    groot_zmq_server_port: 1667
+    wait_for_service_timeout: 1000
+    service_introspection_mode: "disabled"
+    navigators: ["navigate_to_pose", "navigate_through_poses"]
+    navigate_to_pose:
+      plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
+      enable_groot_monitoring: false
+      groot_server_port: 1667
+    navigate_through_poses:
+      plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
+      enable_groot_monitoring: false
+      groot_server_port: 1669
+    # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
+    default_nav_through_poses_bt_xml: "/home/whi/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/whi/ros2_ws/src/whi_nav2_bringup/behavior_trees/nav_to_pose_with_consistent_replanning_and_if_path_becomes_invalid.xml"
+    # default_nav_to_pose_bt_xml: "/home/whi/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_on_route_graph_w_recovery.xml"
+    # default_nav_to_pose_bt_xml: "/home/whi/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_w_replanning_and_recovery_registration.xml"
+    # default_nav_to_pose_bt_xml: "/home/whi/ros2_ws/src/whi_nav2_bringup/behavior_trees/navigate_plain_with_spin2path.xml"
+    # plugin_lib_names is used to add custom BT plugins to the executor (vector of strings). Built-in plugins are added automatically
     plugin_lib_names:
-    - nav2_compute_path_to_pose_action_bt_node
-    - nav2_compute_path_through_poses_action_bt_node
-    - nav2_follow_path_action_bt_node
-    - nav2_back_up_action_bt_node
-    - nav2_spin_action_bt_node
-    - nav2_wait_action_bt_node
-    - nav2_clear_costmap_service_bt_node
-    - nav2_is_stuck_condition_bt_node
-    - nav2_goal_reached_condition_bt_node
-    - nav2_goal_updated_condition_bt_node
-    - nav2_initial_pose_received_condition_bt_node
-    - nav2_reinitialize_global_localization_service_bt_node
-    - nav2_rate_controller_bt_node
-    - nav2_distance_controller_bt_node
-    - nav2_speed_controller_bt_node
-    - nav2_truncate_path_action_bt_node
-    - nav2_goal_updater_node_bt_node
-    - nav2_recovery_node_bt_node
-    - nav2_pipeline_sequence_bt_node
-    - nav2_round_robin_node_bt_node
-    - nav2_transform_available_condition_bt_node
-    - nav2_time_expired_condition_bt_node
-    - nav2_distance_traveled_condition_bt_node
-    - nav2_single_trigger_bt_node
-    - nav2_is_battery_low_condition_bt_node
-    - nav2_navigate_through_poses_action_bt_node
-    - nav2_navigate_to_pose_action_bt_node
-    - nav2_remove_passed_goals_action_bt_node
-    - nav2_planner_selector_bt_node
-    - nav2_controller_selector_bt_node
-    - nav2_goal_checker_selector_bt_node
-    - nav2_path_expiring_timer_condition
-    - nav2_globally_updated_goal_condition_bt_node
-    - nav2_is_path_valid_condition_bt_node
-    - nav2_smooth_path_action_bt_node
-    - nav2_compute_route_bt_node
-    - nav2_get_pose_from_path_action_bt_node
-    - nav2_get_current_pose_action_bt_node
-    - nav2_concatenate_paths_action_bt_node
-    - nav2_are_poses_near_condition_bt_node
-    - whi_nav2_pose_registration_action_bt_node
-    - whi_nav2_spin_to_path_action_bt_node
-    - whi_nav2_concatenate_paths_with_arc_action_bt_node
-    - whi_nav2_trigger_action_bt_node
-    - whi_nav2_sync_trigger_action_bt_node
-    - whi_nav2_follow_object_action_bt_node
-    - whi_nav2_cancel_follow_object_action_bt_node
-    - whi_nav2_is_robot_idle_condition_bt_node
-    - whi_nav2_is_robot_docking_condition_bt_node
-    - whi_nav2_is_charging_enough_condition_bt_node
-    - whi_nav2_io_request_action_bt_node
+      - whi_nav2_pose_registration_action_bt_node
+      - whi_nav2_spin_to_path_action_bt_node
+      - whi_nav2_concatenate_paths_with_arc_action_bt_node
+      - whi_nav2_trigger_action_bt_node
+      - whi_nav2_sync_trigger_action_bt_node
+      - whi_nav2_follow_object_action_bt_node
+      - whi_nav2_cancel_follow_object_action_bt_node
+      - whi_nav2_is_robot_idle_condition_bt_node
+      - whi_nav2_is_robot_docking_condition_bt_node
+      - whi_nav2_is_charging_enough_condition_bt_node
+      - whi_nav2_io_request_action_bt_node
+    error_code_name_prefixes:
+      - assisted_teleop
+      - backup
+      - compute_path
+      - dock_robot
+      - drive_on_heading
+      - follow_path
+      - nav_thru_poses
+      - nav_to_pose
+      - route
+      - spin
+      - smoother
+      - undock_robot
+      - wait
 
-bt_navigator_rclcpp_node:
-  ros__parameters:
-    use_sim_time: False
 
 controller_server:
   ros__parameters:
-    use_sim_time: False
     controller_frequency: 15.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
@@ -205,24 +176,10 @@ controller_server:
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
 
-controller_server_rclcpp_node:
-  ros__parameters:
-    use_sim_time: False
-
-whi_pose_registration_server:
-  ros__parameters:
-    use_stamped_vel: false
-    controller_plugins: ["ChargerRegistration"]
-    ChargerRegistration:
-      plugin: "whi_pose_registration_clients::ChargerPlanner"
-
-whi_pose_registration_server_rclcpp_node:
-  ros__parameters:
-    use_sim_time: False
 
 whi_nav2_bt_actions_server:
   ros__parameters:
-    use_stamped_vel: false
+    use_stamped_vel: true
     cycle_frequency: 10.0
     global_frame: odom
     robot_base_frame: base_link
@@ -234,13 +191,10 @@ whi_nav2_bt_actions_server:
       plugin: whi_nav2_bt_actions_server/SpinToPath
       simulate_ahead_time: 2.0
       min_rotational_vel: 0.1
-      max_rotational_vel: 1.0
+      max_rotational_vel: 0.3
       rotational_acc_lim: 1.57
       check_collision: false
 
-whi_nav2_bt_actions_server_rclcpp_node:
-  ros__parameters:
-    use_sim_time: False
 
 local_costmap:
   local_costmap:
@@ -250,7 +204,6 @@ local_costmap:
       transform_tolerance: 0.8
       global_frame: odom
       robot_base_frame: base_link
-      use_sim_time: False
       rolling_window: true
       width: 10
       height: 10
@@ -277,7 +230,7 @@ local_costmap:
           data_type: "LaserScan"
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
-        enabled: True
+        enabled: False
         publish_voxel_map: True
         origin_z: 0.0
         z_resolution: 0.2
@@ -307,12 +260,8 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 2.0
       always_send_full_costmap: True
-  local_costmap_client:
-    ros__parameters:
-      use_sim_time: False
-  local_costmap_rclcpp_node:
-    ros__parameters:
-      use_sim_time: False
+      service_introspection_mode: "disabled"
+
 
 global_costmap:
   global_costmap:
@@ -322,7 +271,6 @@ global_costmap:
       transform_tolerance: 0.8
       global_frame: map
       robot_base_frame: base_link
-      use_sim_time: False
       # robot_radius: 0.22
       footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
       resolution: 0.1
@@ -377,17 +325,14 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 4.0
       always_send_full_costmap: True
-  global_costmap_client:
-    ros__parameters:
-      use_sim_time: False
-  global_costmap_rclcpp_node:
-    ros__parameters:
-      use_sim_time: False
+      service_introspection_mode: "disabled"
+
 
 keepout_filter_mask_server:
   ros__parameters:
     topic_name: keepout_filter_mask
     # yaml_filename: ""
+
 
 keepout_costmap_filter_info_server:
   ros__parameters:
@@ -397,26 +342,30 @@ keepout_costmap_filter_info_server:
     base: 0.0
     multiplier: 1.0
 
+
 map_server:
   ros__parameters:
-    use_sim_time: False
     yaml_filename: /home/nvidia/ros2_ws/field_test_hall.yaml
+    service_introspection_mode: "disabled"
+
 
 map_saver:
   ros__parameters:
-    use_sim_time: False
     save_map_timeout: 10.0
     free_thresh_default: 0.25
     occupied_thresh_default: 0.65
     map_subscribe_transient_local: True
+    service_introspection_mode: "disabled"
+
 
 planner_server:
   ros__parameters:
     expected_planner_frequency: 15.0
-    use_sim_time: False
     planner_plugins: ["GridBased"]
+    costmap_update_timeout: 1.0
+    service_introspection_mode: "disabled"
     GridBased:
-      plugin: "nav2_navfn_planner/NavfnPlanner"
+      plugin: "nav2_navfn_planner::NavfnPlanner"
       tolerance: 0.5
       use_astar: false
       allow_unknown: false
@@ -444,34 +393,30 @@ planner_server:
       # w_traversal_cost: 2.0
       # allow_unknown: false
 
-planner_server_rclcpp_node:
-  ros__parameters:
-    use_sim_time: False
 
 behavior_server:
   ros__parameters:
-    costmap_topic: local_costmap/costmap_raw
-    footprint_topic: local_costmap/published_footprint
+    local_costmap_topic: local_costmap/costmap_raw
+    global_costmap_topic: global_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
     behavior_plugins: ["spin", "backup", "wait"]
     spin:
-      plugin: "nav2_behaviors/Spin"
+      plugin: "nav2_behaviors::Spin"
     backup:
-      plugin: "nav2_behaviors/BackUp"
+      plugin: "nav2_behaviors::BackUp"
     wait:
-      plugin: "nav2_behaviors/Wait"
-    global_frame: odom
+      plugin: "nav2_behaviors::Wait"
+    local_frame: odom
+    global_frame: map
     robot_base_frame: base_link
     transform_tolerance: 0.5
-    use_sim_time: False
     simulate_ahead_time: 2.0
     max_rotational_vel: 0.8
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
 
-robot_state_publisher:
-  ros__parameters:
-    use_sim_time: False
 
 smoother_server:
   ros__parameters:

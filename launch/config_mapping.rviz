@@ -7,8 +7,9 @@ Panels:
         - /Global Options1
         - /Status1
         - /LaserScan1/Topic1
+        - /MarkerArray1
       Splitter Ratio: 0.5
-    Tree Height: 435
+    Tree Height: 182
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -24,6 +25,8 @@ Panels:
     Splitter Ratio: 0.5
   - Class: whi_rviz_plugins/Map_saver
     Name: Map_saver
+  - Class: slam_toolbox::SlamToolboxPlugin
+    Name: SlamToolboxPlugin
 Visualization Manager:
   Class: ""
   Displays:
@@ -46,6 +49,8 @@ Visualization Manager:
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 0.699999988079071
+      Binary representation: false
+      Binary threshold: 100
       Class: rviz_default_plugins/Map
       Color Scheme: map
       Draw Behind: false
@@ -54,6 +59,7 @@ Visualization Manager:
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /map
@@ -102,7 +108,12 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        laser_multi:
+        left_front:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_rear:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -127,15 +138,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        link_lift_linear:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        link_lift_linear_fix:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         link_right_front_steer:
           Alpha: 1
           Show Axes: false
@@ -156,26 +158,24 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        mic:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         plate_base:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        plate_cover:
+        right_front:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        ptz_camera:
+        right_rear:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -196,9 +196,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 69
+      Max Intensity: 124
       Min Color: 0; 0; 0
-      Min Intensity: 8
+      Min Intensity: 10
       Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
@@ -208,6 +208,7 @@ Visualization Manager:
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /scan
@@ -227,7 +228,9 @@ Visualization Manager:
           Value: true
         laser:
           Value: true
-        laser_multi:
+        left_front:
+          Value: true
+        left_rear:
           Value: true
         link_left_front_steer:
           Value: true
@@ -236,10 +239,6 @@ Visualization Manager:
         link_left_rear_steer:
           Value: true
         link_left_rear_wheel:
-          Value: true
-        link_lift_linear:
-          Value: true
-        link_lift_linear_fix:
           Value: true
         link_right_front_steer:
           Value: true
@@ -251,15 +250,13 @@ Visualization Manager:
           Value: true
         map:
           Value: true
-        mic:
-          Value: true
         odom:
           Value: true
         plate_base:
           Value: true
-        plate_cover:
+        right_front:
           Value: true
-        ptz_camera:
+        right_rear:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -277,7 +274,9 @@ Visualization Manager:
                   {}
                 laser:
                   {}
-                laser_multi:
+                left_front:
+                  {}
+                left_rear:
                   {}
                 link_left_front_steer:
                   link_left_front_wheel:
@@ -285,19 +284,15 @@ Visualization Manager:
                 link_left_rear_steer:
                   link_left_rear_wheel:
                     {}
-                link_lift_linear_fix:
-                  link_lift_linear:
-                    ptz_camera:
-                      {}
                 link_right_front_steer:
                   link_right_front_wheel:
                     {}
                 link_right_rear_steer:
                   link_right_rear_wheel:
                     {}
-                mic:
+                right_front:
                   {}
-                plate_cover:
+                right_rear:
                   {}
       Update Interval: 0
       Value: true
@@ -310,13 +305,26 @@ Visualization Manager:
       Max linear: 1.5
       Min angular: 0.10000000149011612
       Min linear: 0.07999999821186066
-      Motion state topic: motion_state
       Name: Teleop
+      Odom topic: odom
       Publish frequency(Hz): 5
-      Remote controller state topic: rc_state
       Software EStop topic: estop
       Twist message topic: cmd_vel
       Use stamped velocity: true
+      Value: true
+      WHI state topic: whi_state
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        slam_toolbox: true
+        slam_toolbox_edges: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /slam_toolbox/graph_visualization
       Value: true
   Enabled: true
   Global Options:
@@ -333,6 +341,9 @@ Visualization Manager:
     - Class: rviz_default_plugins/Measure
       Line color: 128; 128; 0
     - Class: rviz_default_plugins/SetInitialPose
+      Covariance x: 0.25
+      Covariance y: 0.25
+      Covariance yaw: 0.06853891909122467
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -384,8 +395,10 @@ Window Geometry:
   Hide Right Dock: true
   Map_saver:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000015e0000039efc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000023e000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00540065006c0065006f00700100000281000000e6000000e600fffffffb00000012004d00610070005f00730061007600650072010000036d0000006e0000006e00ffffff000000010000010f000002f4fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000002f4000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000005d40000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000002170000039efc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000141000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fc00000184000001a2000001a20100001cfa000000000100000002fb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e0100000000ffffffff0000021700fffffffb0000000c00540065006c0065006f0070010000000000000217000001ae00fffffffb00000012004d00610070005f00730061007600650072010000032c000000af0000006e00ffffff000000010000010f000002f4fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000002f4000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d006501000000000000045000000000000000000000051d0000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
+    collapsed: false
+  SlamToolboxPlugin:
     collapsed: false
   Teleop:
     collapsed: false
@@ -393,6 +406,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  Width: 1848
-  X: 72
+  Width: 1850
+  X: 70
   Y: 27

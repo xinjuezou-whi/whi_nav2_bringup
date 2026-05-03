@@ -17,25 +17,24 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PythonExpression
-from launch_ros.actions import LoadComposableNodes
-from launch_ros.actions import Node, SetParameter
+from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
+from launch_ros.actions import Node, SetParameter, LoadComposableNodes
 from launch_ros.descriptions import ComposableNode, ParameterFile
+from launch_ros.substitutions import FindPackageShare
 from nav2_common.launch import RewrittenYaml
 
 def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
-    map_yaml_file = LaunchConfiguration('map')
+    map_file = LaunchConfiguration('map_file')
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
-    params_file = LaunchConfiguration('params_file')
     use_composition = LaunchConfiguration('use_composition')
     container_name = LaunchConfiguration('container_name')
     container_name_full = (namespace, '/', container_name)
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
 
-    lifecycle_nodes = ['map_server', 'amcl']
+    lifecycle_nodes = ['slam_toolbox']
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
@@ -46,39 +45,46 @@ def generate_launch_description():
     remappings = [('/tf', 'tf'),
                   ('/tf_static', 'tf_static')]
 
-    # Create our own temporary YAML files that include substitutions
-    param_substitutions = {
-        'yaml_filename': map_yaml_file}
+    stdout_linebuf_envvar = SetEnvironmentVariable(
+        'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
 
-    configured_params = ParameterFile(
+    # slam toolbox
+    slam_toolbox_config_file = PathJoinSubstitution(
+        [FindPackageShare("whi_nav2_bringup"), "config", "mapper_params_localization.yaml"]
+    )
+
+    param_substitutions = {
+        'use_sim_time': use_sim_time,
+        'autostart': autostart,
+        'odom_frame': 'odom',
+        'base_frame': 'base_link',
+        'scan_topic': 'scan',
+        'resolution': '0.05',
+        'use_lifecycle_manager': 'true',
+        'map_file_name': map_file
+    }
+
+    configured_slam_toolbox_params = ParameterFile(
         RewrittenYaml(
-            source_file=params_file,
+            source_file=slam_toolbox_config_file,
             root_key=namespace,
             param_rewrites=param_substitutions,
             convert_types=True),
         allow_substs=True)
-
-    stdout_linebuf_envvar = SetEnvironmentVariable(
-        'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
 
     declare_namespace_cmd = DeclareLaunchArgument(
         'namespace',
         default_value='',
         description='Top-level namespace')
 
-    declare_map_yaml_cmd = DeclareLaunchArgument(
-        'map',
-        description='Full path to map yaml file to load')
+    declare_map_file_cmd = DeclareLaunchArgument(
+        'map_file',
+        description='Full path to map files to load')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='false',
         description='Use simulation (Gazebo) clock if true')
-
-    declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value='nav2_params.yaml',
-        description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='true',
@@ -105,25 +111,13 @@ def generate_launch_description():
         actions=[
             SetParameter('use_sim_time', use_sim_time),
             Node(
-                package='nav2_map_server',
-                executable='map_server',
-                name='map_server',
+                parameters=[configured_slam_toolbox_params],
+                package='slam_toolbox',
+                executable='localization_slam_toolbox_node',
+                name='slam_toolbox',
+                namespace=namespace,
                 output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings),
-            Node(
-                package='nav2_amcl',
-                executable='amcl',
-                name='amcl',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings),
+            ),
             Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
@@ -132,7 +126,7 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[{'autostart': autostart},
                             {'node_names': lifecycle_nodes},
-                            {'bond_timeout': 10.0}, # potential: E2
+                            {'bond_timeout': 20.0}, # potential: E2
                 ]),
         ]
     )
@@ -142,16 +136,10 @@ def generate_launch_description():
         target_container=container_name_full,
         composable_node_descriptions=[
             ComposableNode(
-                package='nav2_map_server',
-                plugin='nav2_map_server::MapServer',
-                name='map_server',
-                parameters=[configured_params],
-                remappings=remappings),
-            ComposableNode(
-                package='nav2_amcl',
-                plugin='nav2_amcl::AmclNode',
-                name='amcl',
-                parameters=[configured_params],
+                package='slam_toolbox',
+                plugin='slam_toolbox::localization_slam_toolbox_node',
+                name='slam_toolbox',
+                parameters=[configured_slam_toolbox_params],
                 remappings=remappings),
             ComposableNode(
                 package='nav2_lifecycle_manager',
@@ -170,9 +158,8 @@ def generate_launch_description():
 
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
-    ld.add_action(declare_map_yaml_cmd)
+    ld.add_action(declare_map_file_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_container_name_cmd)

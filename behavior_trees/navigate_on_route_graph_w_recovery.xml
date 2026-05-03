@@ -9,14 +9,13 @@
   if using the route server with known start and target node's locations and not going off graph.
   It also has recovery actions specific to planning / control as well as general system issues.
 -->
-
-<root main_tree_to_execute="MainTree">
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
     <RecoveryNode number_of_retries="6" name="NavigateRecovery">
       <Sequence name="NavigateWithSpinInit">
         <!-- Step 1: Clear the costmap -->
         <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-        <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+        <!-- <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/> -->
         <Wait wait_duration="0.5"/>
 
         <!-- Step 2: Compute the first segment path once -->
@@ -32,7 +31,7 @@
           </Sequence>
           <Sequence name="RecoverySpinAlign">
             <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
             <Wait wait_duration="0.2"/>
           </Sequence>
         </RecoveryNode>
@@ -78,7 +77,7 @@
 
           <RecoveryNode number_of_retries="1" name="FollowPath">
             <FollowPath path="{path}" controller_id="FollowPath"/>
-            <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
           </RecoveryNode>
         </PipelineSequence>
       </Sequence>

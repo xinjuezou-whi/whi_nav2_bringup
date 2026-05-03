@@ -1,21 +1,5 @@
-# Copyright 2025 WheelHub Intelligent
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 slam_toolbox:
   ros__parameters:
-
-    # Plugin params
     solver_plugin: solver_plugins::CeresSolver
     ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
     ceres_preconditioner: SCHUR_JACOBI
@@ -28,18 +12,14 @@ slam_toolbox:
     map_frame: map
     base_frame: base_link
     scan_topic: scan
-    use_map_saver: true
-    mode: mapping #localization
+    mode: localization
 
-    # if you'd like to immediately start continuing a map at a given pose
-    # or at the dock, but they are mutually exclusive, if pose is given
-    # will use pose
-    #map_file_name: test_steve
-    # map_start_pose: [0.0, 0.0, 0.0]
-    #map_start_at_dock: true
+    # if you'd like to start localizing on bringup in a map and pose
+    map_file_name: test_steve
+    map_start_pose: [0.0, 0.0, 0.0]
 
     debug_logging: false
-    throttle_scans: 1
+    throttle_scans: 2
     transform_publish_period: 0.02 #if 0 never publishes odometry
     map_update_interval: 5.0
     resolution: 0.05
@@ -48,22 +28,20 @@ slam_toolbox:
     max_laser_range: 20.0 #for rastering images
     minimum_time_interval: 0.5
     transform_timeout: 0.2
-    tf_buffer_duration: 30.0
+    tf_buffer_duration: 30.
     stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
-    enable_interactive_mode: true
 
     # General Parameters
     use_scan_matching: true
     use_scan_barycenter: true
     minimum_travel_distance: 0.5
     minimum_travel_heading: 0.5
-    scan_buffer_size: 10
+    scan_buffer_size: 3
     scan_buffer_maximum_scan_distance: 10.0
     link_match_minimum_response_fine: 0.1  
     link_scan_maximum_distance: 1.5
-    loop_search_maximum_distance: 3.0
     do_loop_closing: true 
-    loop_match_minimum_chain_size: 10           
+    loop_match_minimum_chain_size: 3
     loop_match_maximum_variance_coarse: 3.0  
     loop_match_minimum_response_coarse: 0.35    
     loop_match_minimum_response_fine: 0.45
@@ -77,6 +55,7 @@ slam_toolbox:
     loop_search_space_dimension: 8.0
     loop_search_space_resolution: 0.05
     loop_search_space_smear_deviation: 0.03
+    loop_search_maximum_distance: 3.0
 
     # Scan Matcher Parameters
     distance_variance_penalty: 0.5      
