@@ -143,7 +143,8 @@ def generate_launch_description():
                 ],
                 arguments = [
                     '-configuration_directory', cartographer_config_dir,
-                    '-configuration_basename', 'backpack_3d_localization.lua',
+                    '-configuration_basename', 'backpack_2d.lua',
+                    # '-configuration_basename', 'backpack_3d_localization.lua', # 3d
                     '-load_state_filename', load_state_file,
                     '-load_frozen_state=true',
                     '-start_trajectory_with_default_topics=true'],
