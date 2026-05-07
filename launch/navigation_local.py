@@ -39,6 +39,25 @@ def is_process_running(name: str) -> bool:
         print(f"process check failed: {e}")
         return False
 
+def choose_localization(context,
+                        cartographer_path,
+                        rtabmap_path,
+                        slam_toolbox_path,
+                        amcl_path):
+
+    cartographer_map = LaunchConfiguration('cartographer_map').perform(context)
+    rtabmap_map = LaunchConfiguration('rtabmap_map').perform(context)
+    slam_toolbox_map = LaunchConfiguration('slam_toolbox_map').perform(context)
+
+    if cartographer_map != "":
+        return cartographer_path
+    elif rtabmap_map != "":
+        return rtabmap_path
+    elif slam_toolbox_map != "":
+        return slam_toolbox_path
+    else:
+        return amcl_path
+
 def launch_setup(context, *args, **kwargs):
     unique_processes = [
         "whi_rc_bridge_node",
@@ -65,9 +84,9 @@ def launch_setup(context, *args, **kwargs):
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     local_planner = LaunchConfiguration("local_planner").perform(context)
     map = LaunchConfiguration("map")
-    load_state_file = LaunchConfiguration("load_state_file")
-    use_rtabmap = LaunchConfiguration("use_rtabmap")
-    db_file = LaunchConfiguration("db_file")
+    cartographer_map = LaunchConfiguration("cartographer_map")
+    rtabmap_map = LaunchConfiguration("rtabmap_map")
+    slam_toolbox_map = LaunchConfiguration("slam_toolbox_map")
     keepout_mask_file = LaunchConfiguration("keepout_mask_file")
     graph_file = LaunchConfiguration('graph_file')
 
@@ -120,15 +139,19 @@ def launch_setup(context, *args, **kwargs):
     ])
 
     # navigation related
+    facilities_launch_file = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'facilities_launch.py')
+
     amcl_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_amcl_launch.py')
+    slam_toolbox_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_slam_toolbox_launch.py')
     cartographer_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_cartographer_launch.py')
     rtabmap_path = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'localization_rtabmap_launch.py')
-    
-    facilities_launch_file = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'facilities_launch.py')
-    localization_launch_file = PythonExpression([
-        '"', cartographer_path, '" if "', LaunchConfiguration('load_state_file'),
-        '" != "" else ( "', rtabmap_path, '" if "', LaunchConfiguration('use_rtabmap'), '" == "true" else "', amcl_path, '" )'
-    ])
+    localization_launch_file = choose_localization(
+        context,
+        cartographer_path,
+        rtabmap_path,
+        slam_toolbox_path,
+        amcl_path
+    )
 
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("whi_nav2_bringup"), "launch", "config_nav2.rviz"]
@@ -186,52 +209,15 @@ def launch_setup(context, *args, **kwargs):
         output='screen'
     )
 
-    # pose registration
-    start_pose_registration_cmd = Node(
-        package='whi_pose_registration_server',
-        executable='whi_pose_registration_server',
-        name='whi_pose_registration_server',
-        namespace=namespace,
-        parameters=[configured_nav2_params],
-        output='screen'
-    )
-
-    # bt actions server
-    start_bt_actions_server_cmd = Node(
-        package='whi_nav2_bt_actions_server',
-        executable='whi_nav2_bt_actions_server',
-        name='whi_nav2_bt_actions_server',
-        namespace=namespace,
-        parameters=[configured_nav2_params],
-        output='screen'
-    )
-    
-    # life cycle nodes
-    lifecycle_nodes = [
-        # 'whi_pose_registration_server',
-        'whi_nav2_bt_actions_server',
-    ]
-    start_life_cycle_nodes_cmd = Node(
-        package='nav2_lifecycle_manager',
-        executable='lifecycle_manager',
-        name='lifecycle_manager_whi',
-        namespace=namespace,
-        output='screen',
-        parameters=[
-            {'use_sim_time': use_sim_time},
-            {'autostart': autostart},
-            {'node_names': lifecycle_nodes}
-        ]
-    )
-
     # navigation launching commands
     start_localization_cmd = IncludeLaunchDescription(
         localization_launch_file,
         launch_arguments={
             'namespace': namespace,
             'map': map,
-            'load_state_file': load_state_file,
-            'db_file': db_file,
+            'load_state_file': cartographer_map,
+            'db_file': rtabmap_map,
+            'map_file': slam_toolbox_map,
             'use_ekf': use_ekf,
             'use_sim_time': use_sim_time,
             'autostart': autostart,
@@ -271,9 +257,6 @@ def launch_setup(context, *args, **kwargs):
     )
 
     launch_nodes = [
-        # start_pose_registration_cmd,
-        start_bt_actions_server_cmd,
-        start_life_cycle_nodes_cmd,
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
         start_rslidar_cmd,
@@ -321,14 +304,14 @@ def generate_launch_description():
             'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
             description='Full path to map file to load'),
         DeclareLaunchArgument(
-            'load_state_file', default_value='',
+            'cartographer_map', default_value='',
             description='Full path to pbstream file to load will trigger cartographer localization'),
         DeclareLaunchArgument(
-            'use_rtabmap', default_value='false',
-            description='Use rtabmap to localizing'),
-        DeclareLaunchArgument(
-            'db_file', default_value='/home/nvidia/.ros/rtabmap.db',
+            'rtabmap_map', default_value='',
             description='Full path to database file to load will trigger rtabmap localization'),
+        DeclareLaunchArgument(
+            'slam_toolbox_map', default_value='',
+            description='Full path to slam_toolbox map file to load will trigger slam_toolbox localization'),
         DeclareLaunchArgument(
             'keepout_mask_file', default_value='',
             description='Full path to the keepout zone file to load'),
