@@ -212,7 +212,9 @@ def launch_setup(context, *args, **kwargs):
     # SLAM
     start_rtabmap_slam_cmd = Node(
         namespace=namespace,
-        package='rtabmap_slam', executable='rtabmap', output='screen',
+        package='rtabmap_slam',
+        executable='rtabmap',
+        name='rtabmap',
         parameters=[
             parameters,
             {
@@ -228,6 +230,7 @@ def launch_setup(context, *args, **kwargs):
         remappings=remappings_rtabmap + [
             ('odom', 'odometry/filtered'), # with fuse
         ],
+        output='screen',
     )
 
     launch_nodes = [

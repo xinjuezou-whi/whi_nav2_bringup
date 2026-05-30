@@ -12,7 +12,7 @@ lidar_docking:
       side_length: 0.11
       downsample_size: 0.01
     dock_template_120.pcd:
-      normal_angle: 130.0
+      normal_angle: 120.0
       side_length: 0.117
       downsample_size: 0.01
     debug:
