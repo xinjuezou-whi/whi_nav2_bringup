@@ -24,7 +24,7 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 from launch_ros.actions import Node, SetParameter
 from launch_ros.descriptions import ParameterFile
 from launch_ros.substitutions import FindPackageShare
-from launch.event_handlers import OnProcessExit
+from launch.event_handlers import OnProcessExit, OnProcessStart
 import subprocess
 
 # check if a process name appears in `ps aux`
