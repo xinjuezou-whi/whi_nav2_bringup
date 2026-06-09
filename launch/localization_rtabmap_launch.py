@@ -28,6 +28,7 @@ def launch_setup(context, *args, **kwargs):
     namespace = LaunchConfiguration('namespace')
     db_file = LaunchConfiguration('db_file')
     icp_odom = LaunchConfiguration("icp_odom").perform(context)
+    fast_lio_odom = LaunchConfiguration("fast_lio_odom").perform(context)
     rgb = LaunchConfiguration("rgb").perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
@@ -129,10 +130,32 @@ def launch_setup(context, *args, **kwargs):
         'Mem/InitWMWithAllNodes': 'True',
     }
 
-    remappings_rtabmap= [
-        ('scan_cloud', 'rslidar_points'),
-        # ('imu', 'imu_data'),
-    ]
+    if fast_lio_odom.lower() in ("true", "1"): # in case it is a string:
+        remappings_rtabmap = [
+            ('scan_cloud', 'cloud_registered_body'),
+        ]
+    else:
+        remappings_rtabmap = [
+            # ('scan_cloud', 'rslidar_points'),
+            ('scan_cloud', 'livox/lidar'),
+            # ('imu', 'imu_data'),
+        ]
+
+    if icp_odom.lower() in ("true", "1"): # in case it is a string
+        remappings_rtabmap.extend([
+            ('odom', 'icp_odom'),
+            # ('imu', 'imu_data'),
+            ('imu', 'livox/imu'),
+        ])
+        # parameters['RGBD/NeighborLinkRefining'] = 'false'
+    elif fast_lio_odom.lower() in ("true", "1"): # in case it is a string
+        remappings_rtabmap.extend([
+            ('odom', 'Odometry'),
+        ])
+    else:
+        remappings_rtabmap.extend([
+            ('odom', 'odometry/filtered'),
+        ])
 
     if rgb.lower() in ("true", "1"): # in case it is a string:
         parameters['subscribe_rgb']=True
@@ -141,16 +164,6 @@ def launch_setup(context, *args, **kwargs):
             ('rgb/camera_info', 'camera_info'),
             ('rgb/image', 'image_raw'),
         ])
-
-    # with no fuse
-    # if icp_odom.lower() in ("true", "1"): # in case it is a string:
-    #     remappings_rtabmap.extend([
-    #         ('odom', 'icp_odom'),
-    #     ])
-    # else:
-    #     remappings_rtabmap.extend([
-    #         ('odom', 'odometry/filtered'),
-    #     ])
 
     # RGB camera
     usb_cam_launch_file = PathJoinSubstitution([
@@ -179,9 +192,7 @@ def launch_setup(context, *args, **kwargs):
                         "publish_tf": False, # with fuse
                     }
         ],
-        remappings=remappings_rtabmap + [
-            ('odom', 'icp_odom'),
-        ],
+        remappings=remappings_rtabmap,
         condition=IfCondition(LaunchConfiguration("icp_odom")),
     )
 
@@ -205,7 +216,9 @@ def launch_setup(context, *args, **kwargs):
             }
         ],
         remappings=[
-            ('cloud', 'rslidar_points'),
+            # ('cloud', 'rslidar_points'),
+            ('scan_cloud', 'livox/lidar'),
+
         ],
     )
     
@@ -227,9 +240,7 @@ def launch_setup(context, *args, **kwargs):
                 'sync_queue_size': 50, # increase from default 10
             }
         ],
-        remappings=remappings_rtabmap + [
-            ('odom', 'odometry/filtered'), # with fuse
-        ],
+        remappings=remappings_rtabmap,
         output='screen',
     )
 
@@ -251,6 +262,8 @@ def generate_launch_description():
             description='database file name'),
         DeclareLaunchArgument('icp_odom', default_value='false',
             description='Whether to use icp odom'),
+        DeclareLaunchArgument('fast_lio_odom', default_value='false',
+            description='whether to use fast_lio odometry'),
         DeclareLaunchArgument('rgb', default_value='false',
             description='Whether to use RGB visual'),
         DeclareLaunchArgument('use_sim_time', default_value='false',

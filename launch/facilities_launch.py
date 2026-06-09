@@ -35,7 +35,7 @@ def generate_launch_description():
     container_name_full = (namespace, '/', container_name)
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
-    use_ekf = LaunchConfiguration("use_ekf")
+    odom_topic = LaunchConfiguration("odom_topic")
     vehicle = LaunchConfiguration("vehicle")
     keepout_mask_file = LaunchConfiguration("keepout_mask_file")
     graph_file = LaunchConfiguration('graph_file')
@@ -73,9 +73,7 @@ def generate_launch_description():
     param_substitutions = {
         'use_sim_time': use_sim_time,
         'autostart': autostart,
-        'odom_topic': PythonExpression([
-            "'odometry/filtered' if '", use_ekf, "' == 'true' else 'odom'"
-        ]),
+        'odom_topic': odom_topic,
     }
     value_substitutions = {
         'KEEPOUT_ZONE_ENABLED': use_keepout_zones,
@@ -184,9 +182,9 @@ def generate_launch_description():
         'log_level', default_value='info',
         description='log level')
 
-    declare_use_ekf_cmd = DeclareLaunchArgument(
-        'use_ekf', default_value='true',
-        description='Use ekf to fuse localizationd')
+    declare_odom_topic_cmd = DeclareLaunchArgument(
+        'odom_topic', default_value='odom',
+        description='Topic name for odometry messages')
 
     declare_vehicle_cmd = DeclareLaunchArgument(
         'vehicle', default_value='L1',
@@ -473,7 +471,7 @@ def generate_launch_description():
     ld.add_action(declare_container_name_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
-    ld.add_action(declare_use_ekf_cmd)
+    ld.add_action(declare_odom_topic_cmd)
     ld.add_action(declare_vehicle_cmd)
     ld.add_action(declare_keepout_mask_file_cmd)
     ld.add_action(declare_graph_file_cmd)

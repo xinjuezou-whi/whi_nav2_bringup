@@ -44,6 +44,7 @@ def launch_setup(context, *args, **kwargs):
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
     icp_odom = LaunchConfiguration("icp_odom").perform(context)
+    fast_lio_odom = LaunchConfiguration("fast_lio_odom").perform(context)
     incremental = LaunchConfiguration("incremental").perform(context)
     db_file = LaunchConfiguration('db_file')
     bag_file = LaunchConfiguration("bag_file").perform(context)
@@ -97,16 +98,29 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Nodes launching commands
-    enable_odom = 'false' if icp_odom.lower() == 'true' else 'true'
-    use_ekf = 'false' if icp_odom.lower() == 'true' else 'true'
+    odom_provider = icp_odom.lower() in ("true", "1") or fast_lio_odom.lower() in ("true", "1")
+    if odom_provider:
+        enable_odom = "false"
+        enable_odom_tf = "false"
+        use_ekf_out = "false"
+    elif use_ekf.lower() in ("true", "1"):
+        enable_odom = "true"
+        enable_odom_tf = "true"
+        use_ekf_out = "true"
+    else:
+        enable_odom = LaunchConfiguration("enable_odom")
+        enable_odom_tf = LaunchConfiguration("enable_odom_tf")
+        use_ekf_out = LaunchConfiguration("use_ekf")
+
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={
             'namespace': namespace,
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
-            'use_ekf': use_ekf,
-            'enable_odom': enable_odom
+            'enable_odom': enable_odom,
+            'enable_odom_tf': enable_odom_tf,
+            'use_ekf': use_ekf_out,
         }.items(),
         condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
@@ -117,6 +131,19 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={
             'namespace': namespace,
             'start_rviz': 'false',
+        }.items(),
+        condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
+    )
+    livox_launch_file = PathJoinSubstitution([
+        FindPackageShare('livox_ros_driver2'),
+        'launch',
+        'msg_MID360_launch.py'
+    ])
+    start_livox_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(livox_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+            'rviz': 'false',
         }.items(),
         condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
@@ -167,6 +194,7 @@ def launch_setup(context, *args, **kwargs):
         'subscribe_rgb': False,
         'subscribe_scan': False,
         'subscribe_scan_cloud': True,
+        'subscribe_odom': True,
         'approx_sync': True,
         # rtabmap
         'Rtabmap/DetectionRate': '1',             # frequency Hz, 0 means go as fast as the data(including laser and image) is coming
@@ -179,7 +207,7 @@ def launch_setup(context, *args, **kwargs):
         'Grid/CellSize': '0.1',
         'Grid/MapFrameProjection': 'false',       # from Mathieu
         'Grid/NormalsSegmentation': 'false',      # ************************ trying
-        'Grid/MaxObstacleHeight': '5.0',
+        'Grid/MaxObstacleHeight': '3.0',
         'Grid/MinGroundHeight': '0.0',            #'-0.5',
         'Grid/MaxGroundHeight': '0.05',           #'-0.01',
         'Grid/3D': 'false',
@@ -246,20 +274,37 @@ def launch_setup(context, *args, **kwargs):
         'OdomF2M/BundleAdjustment': '1',          # Local bundle adjustment: 0=disabled, 1=g2o, 2=cvsba, 3=Ceres
     }
 
-    remappings_rtabmap = [
-        ('scan_cloud', 'rslidar_points'),
-        # ('imu', 'imu_data'),
-    ]
+    if fast_lio_odom.lower() in ("true", "1"): # in case it is a string:
+        remappings_rtabmap = [
+            ('scan_cloud', 'cloud_registered_body'),
+        ]
+    else:
+        remappings_rtabmap = [
+            # ('scan_cloud', 'rslidar_points'),
+            ('scan_cloud', 'livox/lidar'),
+            # ('imu', 'imu_data'),
+        ]
+
     if icp_odom.lower() in ("true", "1"): # in case it is a string
         remappings_rtabmap.extend([
             ('odom', 'icp_odom'),
-            ('imu', 'imu_data'),
+            # ('imu', 'imu_data'),
+            ('imu', 'livox/imu'),
         ])
         # parameters['RGBD/NeighborLinkRefining'] = 'false'
-    else:
+    elif fast_lio_odom.lower() in ("true", "1"): # in case it is a string
+        remappings_rtabmap.extend([
+            ('odom', 'Odometry'),
+        ])
+    elif use_ekf.lower() in ("true", "1"): # in case it is a string
         remappings_rtabmap.extend([
             ('odom', 'odometry/filtered'),
         ])
+    else:
+        remappings_rtabmap.extend([
+            ('odom', 'odom'),
+        ])
+
     if rgb.lower() in ("true", "1"): # in case it is a string
         parameters['subscribe_rgb'] = True
         parameters['Reg/Strategy'] = '2'
@@ -281,6 +326,20 @@ def launch_setup(context, *args, **kwargs):
         arguments=[
             '-d', # This will delete the previous database (~/.ros/rtabmap.db)
         ]
+
+    fast_lio_launch_file = PathJoinSubstitution([
+        FindPackageShare('fast_lio'),
+        'launch',
+        'mapping.launch.py'
+    ])
+    start_fast_lio_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(fast_lio_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+            'rviz': 'false',
+        }.items(),
+        condition=IfCondition(LaunchConfiguration("fast_lio_odom")),
+    )
 
     start_rtabmap_odom_cmd = Node(
         package='rtabmap_odom', executable='icp_odometry', output='screen',
@@ -364,10 +423,12 @@ def launch_setup(context, *args, **kwargs):
 
     launch_nodes = [
         start_whi_motion_hw_if_cmd,
-        start_rslidar_cmd,
+        # start_rslidar_cmd,
+        start_livox_cmd,
         start_usb_cam_cmd,
         start_whi_qrcode_pose_cmd,
         start_whi_landmark_cmd,
+        start_fast_lio_cmd,
         start_rtabmap_odom_cmd,
         start_rtabmap_slam_cmd,
         start_map_saver_server_cmd,
@@ -397,6 +458,8 @@ def generate_launch_description():
             description='enable lidar deskewing'),
         DeclareLaunchArgument('icp_odom', default_value='false',
             description='whether to use icp odometry'),
+        DeclareLaunchArgument('fast_lio_odom', default_value='false',
+            description='whether to use fast_lio odometry'),
         DeclareLaunchArgument('incremental', default_value='false',
             description='whether to map incrementally'),
         DeclareLaunchArgument('db_file', default_value='/home/nvidia/.ros/rtabmap.db',

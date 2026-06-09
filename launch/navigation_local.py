@@ -82,6 +82,8 @@ def launch_setup(context, *args, **kwargs):
     vehicle = LaunchConfiguration("vehicle").perform(context)
     vehicle_model = LaunchConfiguration("vehicle_model").perform(context)
     use_ekf = LaunchConfiguration("use_ekf").perform(context)
+    icp_odom = LaunchConfiguration("icp_odom").perform(context)
+    fast_lio_odom = LaunchConfiguration("fast_lio_odom").perform(context)
     local_planner = LaunchConfiguration("local_planner").perform(context)
     map = LaunchConfiguration("map")
     cartographer_map = LaunchConfiguration("cartographer_map")
@@ -138,6 +140,18 @@ def launch_setup(context, *args, **kwargs):
         'start.py'
     ])
 
+    livox_launch_file = PathJoinSubstitution([
+        FindPackageShare('livox_ros_driver2'),
+        'launch',
+        'msg_MID360_launch.py'
+    ])
+
+    fast_lio_launch_file = PathJoinSubstitution([
+        FindPackageShare('fast_lio'),
+        'launch',
+        'mapping.launch.py'
+    ])
+
     # navigation related
     facilities_launch_file = os.path.join(get_package_share_directory('whi_nav2_bringup'), 'launch', 'facilities_launch.py')
 
@@ -158,6 +172,20 @@ def launch_setup(context, *args, **kwargs):
         # [FindPackageShare("whi_nav2_bringup"), "launch", "config_nav2_multiple.rviz"] # for multiple demo
     )
 
+    odom_provider = icp_odom.lower() in ("true", "1") or fast_lio_odom.lower() in ("true", "1")
+    if odom_provider:
+        enable_odom = "false"
+        enable_odom_tf = "false"
+        use_ekf_out = "false"
+    elif use_ekf.lower() in ("true", "1"):
+        enable_odom = "true"
+        enable_odom_tf = "true"
+        use_ekf_out = "true"
+    else:
+        enable_odom = LaunchConfiguration("enable_odom")
+        enable_odom_tf = LaunchConfiguration("enable_odom_tf")
+        use_ekf_out = LaunchConfiguration("use_ekf")
+
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
         launch_arguments={
@@ -165,7 +193,9 @@ def launch_setup(context, *args, **kwargs):
             'use_stamped_vel': use_stamped_vel,
             'vehicle': vehicle,
             'vehicle_model': vehicle_model,
-            'use_ekf': use_ekf
+            'enable_odom': enable_odom,
+            'enable_odom_tf': enable_odom_tf,
+            'use_ekf': use_ekf_out,
         }.items(),
     )
 
@@ -185,6 +215,15 @@ def launch_setup(context, *args, **kwargs):
             'namespace': namespace,
             'start_rviz': 'false',
         }.items(),
+    )
+
+    start_livox_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(livox_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+            'rviz': 'false',
+        }.items(),
+        condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
 
     # range sensors
@@ -209,6 +248,15 @@ def launch_setup(context, *args, **kwargs):
         output='screen'
     )
 
+    start_fast_lio_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(fast_lio_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+            'rviz': 'false',
+        }.items(),
+        condition=IfCondition(LaunchConfiguration("fast_lio_odom")),
+    )
+
     # navigation launching commands
     start_localization_cmd = IncludeLaunchDescription(
         localization_launch_file,
@@ -218,7 +266,7 @@ def launch_setup(context, *args, **kwargs):
             'load_state_file': cartographer_map,
             'db_file': rtabmap_map,
             'map_file': slam_toolbox_map,
-            'use_ekf': use_ekf,
+            'use_ekf': use_ekf_out,
             'use_sim_time': use_sim_time,
             'autostart': autostart,
             'params_file': nav2_params_file,
@@ -227,6 +275,15 @@ def launch_setup(context, *args, **kwargs):
             'container_name': 'nav2_container',
         }.items(),
     )
+
+    if icp_odom.lower() in ("true", "1"): # in case it is a string
+        odom_topic = 'icp_odom'
+    elif fast_lio_odom.lower() in ("true", "1"): # in case it is a string
+        odom_topic = 'Odometry'
+    elif use_ekf_out.lower() in ("true", "1"): # in case it is a string
+        odom_topic = 'odometry/filtered'
+    else:
+        odom_topic = 'odom'
 
     start_nav2_facilities_cmd = IncludeLaunchDescription(
         facilities_launch_file,
@@ -238,7 +295,7 @@ def launch_setup(context, *args, **kwargs):
             'use_composition': use_composition,
             'use_respawn': use_respawn,
             'container_name': 'nav2_container',
-            'use_ekf': use_ekf,
+            'odom_topic': odom_topic,
             'vehicle': vehicle,
             'keepout_mask_file': keepout_mask_file,
             'graph_file': graph_file,
@@ -259,8 +316,10 @@ def launch_setup(context, *args, **kwargs):
     launch_nodes = [
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
-        start_rslidar_cmd,
+        # start_rslidar_cmd,
+        start_livox_cmd,
         start_range_sensors_cmd,
+        start_fast_lio_cmd,
         start_localization_cmd,
         start_nav2_facilities_cmd,
         start_rviz_cmd
@@ -270,53 +329,41 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument(
-            'namespace', default_value='',
+        DeclareLaunchArgument('namespace', default_value='',
             description='Top-level namespace'),
-        DeclareLaunchArgument(
-            'use_sim_time', default_value='false',
+        DeclareLaunchArgument('use_sim_time', default_value='false',
             description='Use simulation (Gazebo) clock if true'),
-        DeclareLaunchArgument(
-            'autostart', default_value='true',
+        DeclareLaunchArgument('autostart', default_value='true',
             description='Automatically startup the nav2 stack'),
-        DeclareLaunchArgument(
-            'use_composition', default_value='False',
+        DeclareLaunchArgument('use_composition', default_value='False',
             description='Whether to use composed bringup'),
-        DeclareLaunchArgument(
-            'use_respawn', default_value='True',
+        DeclareLaunchArgument('use_respawn', default_value='True',
             description='Whether to respawn if a node crashes. Applied when composition is disabled'),
-        DeclareLaunchArgument(
-            'use_stamped_vel', default_value='False', # False for foxy, humble
+        DeclareLaunchArgument('use_stamped_vel', default_value='True', # False for foxy, humble
             description='Use stamped twist'),
-        DeclareLaunchArgument(
-            "vehicle", default_value="L1",
+        DeclareLaunchArgument("vehicle", default_value="L1",
             description="the mobile robot series"),
-        DeclareLaunchArgument(
-            "vehicle_model", default_value="diff",
+        DeclareLaunchArgument("vehicle_model", default_value="diff",
             description="the mobile robot's dynamic model"),
-        DeclareLaunchArgument(
-            'use_ekf', default_value='true',
+        DeclareLaunchArgument('use_ekf', default_value='true',
             description='Use ekf to fuse localization'),
-        DeclareLaunchArgument(
-            'local_planner', default_value='dwb',
+        DeclareLaunchArgument('icp_odom', default_value='false',
+            description='whether to use icp odometry'),
+        DeclareLaunchArgument('fast_lio_odom', default_value='false',
+            description='whether to use fast_lio odometry'),
+        DeclareLaunchArgument('local_planner', default_value='dwb',
             description='The local planner to use'),
-        DeclareLaunchArgument(
-            'map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
+        DeclareLaunchArgument('map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
             description='Full path to map file to load'),
-        DeclareLaunchArgument(
-            'cartographer_map', default_value='',
+        DeclareLaunchArgument('cartographer_map', default_value='',
             description='Full path to pbstream file to load will trigger cartographer localization'),
-        DeclareLaunchArgument(
-            'rtabmap_map', default_value='',
+        DeclareLaunchArgument('rtabmap_map', default_value='',
             description='Full path to database file to load will trigger rtabmap localization'),
-        DeclareLaunchArgument(
-            'slam_toolbox_map', default_value='',
+        DeclareLaunchArgument('slam_toolbox_map', default_value='',
             description='Full path to slam_toolbox map file to load will trigger slam_toolbox localization'),
-        DeclareLaunchArgument(
-            'keepout_mask_file', default_value='',
+        DeclareLaunchArgument('keepout_mask_file', default_value='',
             description='Full path to the keepout zone file to load'),
-        DeclareLaunchArgument(
-            'graph_file', default_value='',
+        DeclareLaunchArgument('graph_file', default_value='',
             description='Full path to the graph file to load'),
         OpaqueFunction(function=launch_setup)
     ])
