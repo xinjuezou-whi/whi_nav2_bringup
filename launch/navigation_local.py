@@ -99,6 +99,8 @@ def launch_setup(context, *args, **kwargs):
         nav2_params_file_name = f"nav2_params_mppi_{vehicle}.yaml"
     elif local_planner.lower() in ("rpp", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_rpp_{vehicle}.yaml"
+    elif local_planner.lower() in ("vp", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_vp_{vehicle}.yaml"
     else:
         nav2_params_file_name = f"nav2_params_dwb"
 
@@ -370,7 +372,7 @@ def generate_launch_description():
             description='whether to use fast_lio odometry'),
         DeclareLaunchArgument('local_planner', default_value='dwb',
             description='The local planner to use'),
-        DeclareLaunchArgument('map', default_value='/home/nvidia/ros2_ws/field_test.yaml',
+        DeclareLaunchArgument('map', default_value='/home/nvidia/maps/field_test.yaml',
             description='Full path to map file to load'),
         DeclareLaunchArgument('cartographer_map', default_value='',
             description='Full path to pbstream file to load will trigger cartographer localization'),
