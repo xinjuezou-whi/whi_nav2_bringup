@@ -162,10 +162,10 @@ controller_server:
       rotate_to_heading_min_angle: 0.5
       max_angular_accel: 3.0
       max_linear_accel: 2.0
-      max_lateral_accel: 0.2
+      max_lateral_accel: 0.8 ### try 0.8
       max_robot_pose_search_dist: 10.0
       use_interpolation: true
-      use_heading_from_path: false
+      use_heading_from_path: true ### try true
       approach_velocity_scaling_dist: 1.0
 
 
