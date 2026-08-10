@@ -53,8 +53,8 @@
                   <Inverter>
                     <GlobalUpdatedGoal/>
                   </Inverter>
-                    <Wait wait_duration="2.0"/>
-                    <IsPathValid path="{path}"/>
+                  <Wait wait_duration="3.0"/>
+                  <IsPathValid path="{path}"/>
                 </ReactiveSequence>
 
                 <Sequence name="ComputeAndSmoothRoute">
