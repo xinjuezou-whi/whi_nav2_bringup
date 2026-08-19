@@ -15,7 +15,7 @@
       <Sequence name="NavigateWithSpinInit">
         <!-- Step 1: Clear the costmap -->
         <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-        <!-- <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/> -->
+        <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
         <Wait wait_duration="0.5"/>
 
         <!-- Step 2: Compute the first segment path once -->
@@ -32,7 +32,7 @@
           <Sequence name="RecoverySpinAlign">
             <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
             <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
-            <Wait wait_duration="0.2"/>
+            <Wait wait_duration="0.5"/>
           </Sequence>
         </RecoveryNode>
 
@@ -47,11 +47,14 @@
                   </Inverter>
                   <IsPathValid path="{path}"/> <!-- Base it on the complete connected 'path', not simply the 'route_path' -->
                 </ReactiveSequence>
-				
-				<!-- wait for x seconds firstly if the obstacle is on path -->
+
+                <!-- wait for x seconds firstly if the obstacle is on path -->
                 <ReactiveSequence>
                   <Inverter>
                     <GlobalUpdatedGoal/>
+                  </Inverter>
+                  <Inverter>
+                    <IsPathValid path="{path}"/>
                   </Inverter>
                   <Wait wait_duration="3.0"/>
                   <IsPathValid path="{path}"/>
@@ -80,7 +83,10 @@
                   <SmoothPath unsmoothed_path="{route_path}" smoothed_path="{path}" smoother_id="route_smoother"/>
                 </Sequence>
               </Fallback>
-              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+              <Sequence name="RecoveryComputeRoute">
+                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                <Wait wait_duration="0.5"/>
+              </Sequence>
             </RecoveryNode>
           </RateController>
 
@@ -91,7 +97,7 @@
         </PipelineSequence>
       </Sequence>
 
-      <ReactiveFallback name="RecoveryFallback">
+      <ReactiveFallback name="RecoveryNavigate">
         <GoalUpdated/>
         <RoundRobin name="RecoveryActions">
           <Sequence name="ClearingActions">
@@ -99,7 +105,7 @@
             <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
           </Sequence>
           <Wait wait_duration="2.0"/>
-          <BackUp backup_dist="0.30" backup_speed="0.05"/>
+          <BackUp backup_dist="0.15" backup_speed="0.05"/>
         </RoundRobin>
       </ReactiveFallback>
     </RecoveryNode>

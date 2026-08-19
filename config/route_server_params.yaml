@@ -26,3 +26,5 @@ route_server:
       plugin: "nav2_route::DistanceScorer"
     CostmapScorer:
       plugin: "nav2_route::CostmapScorer"
+      max_cost: 254.5
+      invalid_off_map: false # set to false if the global costmap is with rolling window
