@@ -280,7 +280,7 @@ local_costmap:
       # robot_radius: 0.22
       footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
       plugins: ["obstacle_layer", "inflation_layer", "voxel_layer"]
-      filters: ["keepout_filter", "inflation_layer"]
+      filters: ["keepout_filter"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -340,11 +340,14 @@ global_costmap:
       transform_tolerance: 0.8
       global_frame: map
       robot_base_frame: base_link
+      rolling_window: False
+      width: 120
+      height: 120
       # robot_radius: 0.22
       footprint: "[[0.418, 0.34], [0.418, -0.34], [-0.418, -0.34], [-0.418, 0.34]]"
       resolution: 0.1
       plugins: ["static_layer", "obstacle_layer", "inflation_layer", "voxel_layer"]
-      filters: ["keepout_filter", "inflation_layer"]
+      filters: ["keepout_filter"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -359,7 +362,7 @@ global_costmap:
           raytrace_max_range: 20.0
           clearing: True
           marking: True
-          observation_persistence: 2.0
+          observation_persistence: 0.0
           data_type: "LaserScan"
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
