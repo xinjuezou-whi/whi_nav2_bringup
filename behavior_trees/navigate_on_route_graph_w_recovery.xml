@@ -37,7 +37,7 @@
         </RecoveryNode>
 
         <PipelineSequence name="NavigateWithReplanning">
-          <RateController hz="0.5" name="ComputeRouteRateController">
+          <RateController hz="1.0" name="ComputeRouteRateController">
             <RecoveryNode number_of_retries="1" name="ComputeRoute">
               <Fallback>
                 <!-- Compute a new route if a new goal is found or the path is no longer valid -->
@@ -49,7 +49,7 @@
                 </ReactiveSequence>
 
                 <!-- wait for x seconds firstly if the obstacle is on path -->
-                <ReactiveSequence>
+                <Sequence>
                   <Inverter>
                     <GlobalUpdatedGoal/>
                   </Inverter>
@@ -58,7 +58,7 @@
                   </Inverter>
                   <Wait wait_duration="3.0"/>
                   <IsPathValid path="{path}"/>
-                </ReactiveSequence>
+                </Sequence>
 
                 <Sequence name="ComputeAndSmoothRoute">
                   <!-- Compute the route -->
@@ -84,7 +84,7 @@
                 </Sequence>
               </Fallback>
               <Sequence name="RecoveryComputeRoute">
-                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
                 <Wait wait_duration="0.5"/>
               </Sequence>
             </RecoveryNode>
