@@ -19,9 +19,10 @@
         <Wait wait_duration="0.5"/>
 
         <!-- Step 2: Compute the first segment path once -->
-        <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
+        <!-- <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
         <GetPoseFromPath path="{route_path}" index="0" pose="{route_start_pose}"/>
-        <ComputePathToPose goal="{route_start_pose}" path="{path_spin}" planner_id="GridBased"/>
+        <ComputePathToPose goal="{route_start_pose}" path="{path_spin}" planner_id="GridBased"/> -->
+        <ComputePathToPose goal="{goal}" path="{path_spin}" planner_id="GridBased"/>
 
         <!-- Step 3: Align with that path (atomic with RecoveryNode) -->
         <RecoveryNode number_of_retries="1" name="SpinAlign">
@@ -58,6 +59,9 @@
                   </Inverter>
                   <Wait wait_duration="3.0"/>
                   <IsPathValid path="{path}"/>
+                  <Inverter>
+                    <TimeExpired seconds="65.0"/>
+                  </Inverter>
                 </Sequence>
 
                 <Sequence name="ComputeAndSmoothRoute">
