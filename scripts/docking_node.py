@@ -30,32 +30,24 @@ class LidarDockingNode(Node):
     def __init__(self):
         super().__init__('lidar_docking')
 
-        print("WHI LiDAR dock feature registration VERSION 00.02.1")
+        print("WHI LiDAR dock feature registration VERSION 00.02.2")
         print("Copyright©2026 Wheel Hub Intelligent Co.,Ltd. All rights reserved")
 
         # --- params ---
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('target_frame', 'odom')
         self.declare_parameter('template_file', 'dock_template_sym.pcd')
-        self.declare_parameter('template_normal_angle', 90.0)
-        self.declare_parameter('template_side_length', 0.2)
-        self.declare_parameter('downsample_size', 0.01)
         self.declare_parameter('debug.visualize', False)
         self.base_frame = self.get_parameter('base_frame').value
         self.target_frame = self.get_parameter('target_frame').value
         self.template_file = self.get_parameter('template_file').value
         self.declare_parameter(self.template_file + '.normal_angle', 90.0)
-        self.declare_parameter(self.template_file + '.side_length', 0.2)
+        self.declare_parameter(self.template_file + '.side_length', 0.12)
         self.declare_parameter(self.template_file + '.downsample_size', 0.01)
         self.template_normal_angle = self.get_parameter(self.template_file + '.normal_angle').value
         self.template_normal_angle = 180.0 - self.template_normal_angle if self.template_normal_angle > 90.0 else self.template_normal_angle
         self.template_side_length = self.get_parameter(self.template_file + '.side_length').value
         self.downsample_size = self.get_parameter(self.template_file + '.downsample_size').value
-
-        # self.template_normal_angle = self.get_parameter('template_normal_angle').value
-        # self.template_normal_angle = 180.0 - self.template_normal_angle if self.template_normal_angle > 90.0 else self.template_normal_angle
-        # self.template_side_length = self.get_parameter('template_side_length').value
-        # self.downsample_size = self.get_parameter('downsample_size').value
         self.debug_visualize = self.get_parameter('debug.visualize').value
 
         # --- TF setup ---
@@ -103,7 +95,10 @@ class LidarDockingNode(Node):
                     translation = self.template_pcd.get_center()
                     self.get_logger().error("No valid line pair found!")
 
-                self.template_pcd.translate(-translation)
+                # self.template_pcd.translate(-translation)
+                pts = np.asarray(self.template_pcd.points)
+                pts -= translation
+                self.template_pcd.points = o3d.utility.Vector3dVector(pts)
                 self.template_ready = True
                 self.get_logger().info(f"Template Ready. Points: {len(self.template_pcd.points)}")
 

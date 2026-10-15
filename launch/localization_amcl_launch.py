@@ -130,11 +130,13 @@ def generate_launch_description():
                 name='lifecycle_manager_localization',
                 output='screen',
                 arguments=['--ros-args', '--log-level', log_level],
-                parameters=[{'use_sim_time': use_sim_time},
-                            {'autostart': autostart},
-                            {'node_names': lifecycle_nodes},
-                            {'bond_timeout': 10.0}, # potential: E2
-            ]),
+                parameters=[
+                    {'use_sim_time': use_sim_time},
+                    {'autostart': autostart},
+                    {'node_names': lifecycle_nodes},
+                    {'bond_timeout': 10.0}, # potential: E2
+                ]
+            ),
         ]
     )
 
@@ -158,9 +160,12 @@ def generate_launch_description():
                 package='nav2_lifecycle_manager',
                 plugin='nav2_lifecycle_manager::LifecycleManager',
                 name='lifecycle_manager_localization',
-                parameters=[{'use_sim_time': use_sim_time,
-                             'autostart': autostart,
-                             'node_names': lifecycle_nodes}]),
+                parameters=[{
+                    'use_sim_time': use_sim_time,
+                    'autostart': autostart,
+                    'node_names': lifecycle_nodes
+                }]
+            ),
         ],
     )
 
