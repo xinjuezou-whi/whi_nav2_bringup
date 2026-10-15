@@ -49,7 +49,11 @@
                   <IsPathValid path="{path}"/> <!-- Base it on the complete connected 'path', not simply the 'route_path' -->
                 </ReactiveSequence>
 
+<<<<<<< HEAD
 				        <!-- wait for x seconds firstly if the obstacle is on path -->
+=======
+				<!-- wait for x seconds firstly if the obstacle is on path -->
+>>>>>>> f5ac1a87f6164e9baf3a6b445cf4e500ad99c76f
                 <ReactiveSequence>
                   <Inverter>
                     <GlobalUpdatedGoal/>

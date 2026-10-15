@@ -139,8 +139,11 @@ bt_navigator:
     - whi_nav2_is_robot_docking_condition_bt_node
     - whi_nav2_is_charging_enough_condition_bt_node
     - whi_nav2_io_request_action_bt_node
+<<<<<<< HEAD
     - whi_multi_floor_bt_nodes
     - whi_nav2_drive_distance_bt_node
+=======
+>>>>>>> f5ac1a87f6164e9baf3a6b445cf4e500ad99c76f
     - whi_nav2_compute_route_action_bt_node
 
 bt_navigator_rclcpp_node:

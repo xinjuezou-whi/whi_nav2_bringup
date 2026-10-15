@@ -207,10 +207,17 @@ def launch_setup(context, *args, **kwargs):
         'Grid/CellSize': '0.1',
         'Grid/MapFrameProjection': 'false',       # from Mathieu
         'Grid/NormalsSegmentation': 'false',      # ************************ trying
+<<<<<<< HEAD
         'Grid/MaxObstacleHeight': '5.0',
         'Grid/MinGroundHeight': '0.0',            #'-0.5', 
         'Grid/MaxGroundHeight': '0.05',           #'-0.01',  
         'Grid/3D': 'false',               
+=======
+        'Grid/MaxObstacleHeight': '3.0',
+        'Grid/MinGroundHeight': '0.0',            #'-0.5',
+        'Grid/MaxGroundHeight': '0.05',           #'-0.01',
+        'Grid/3D': 'false',
+>>>>>>> f5ac1a87f6164e9baf3a6b445cf4e500ad99c76f
         'Grid/RayTracing': 'true',
         # 'GridGlobal/UpdateError': '0.1',          # from Mathieu
         'Mem/NotLinkedNodesKept': 'true',         # to suppress the size of db

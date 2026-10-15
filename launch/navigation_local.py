@@ -221,6 +221,7 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
+<<<<<<< HEAD
 
     # RealSense Camera Inclusion
     realsense_launch_file = PathJoinSubstitution([
@@ -251,6 +252,15 @@ def launch_setup(context, *args, **kwargs):
         name='obstacle_detector',
         namespace=namespace,
         output='screen'
+=======
+    start_livox_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(livox_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+            'rviz': 'false',
+        }.items(),
+        condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
+>>>>>>> f5ac1a87f6164e9baf3a6b445cf4e500ad99c76f
     )
 
     # range sensors
@@ -346,8 +356,12 @@ def launch_setup(context, *args, **kwargs):
         # start_rslidar_cmd,
         start_livox_cmd,
         start_range_sensors_cmd,
+<<<<<<< HEAD
         # start_realsense_cmd,                  # Added here
         start_obstacle_detector_cmd,
+=======
+        start_fast_lio_cmd,
+>>>>>>> f5ac1a87f6164e9baf3a6b445cf4e500ad99c76f
         start_localization_cmd,
         start_nav2_facilities_cmd,
         start_rviz_cmd
