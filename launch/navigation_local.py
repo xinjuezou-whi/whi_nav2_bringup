@@ -179,12 +179,12 @@ def launch_setup(context, *args, **kwargs):
         use_ekf_out = "false"
     elif use_ekf.lower() in ("true", "1"):
         enable_odom = "true"
-        enable_odom_tf = "true"
+        enable_odom_tf = "false"
         use_ekf_out = "true"
     else:
-        enable_odom = LaunchConfiguration("enable_odom")
-        enable_odom_tf = LaunchConfiguration("enable_odom_tf")
-        use_ekf_out = LaunchConfiguration("use_ekf")
+        enable_odom = "true"
+        enable_odom_tf = "true"
+        use_ekf_out = "use_ekf"
 
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
