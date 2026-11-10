@@ -48,7 +48,8 @@ def generate_launch_description():
         'controller_server',
         'smoother_server',
         'planner_server',
-        'route_server',
+        # 'route_server', # nav2 default
+        'whi_route_server',
         'behavior_server',
         'bt_navigator',
         'waypoint_follower',
@@ -114,6 +115,20 @@ def generate_launch_description():
     configured_route_server_params = ParameterFile(
         RewrittenYaml(
             source_file=route_server_params_file,
+            root_key=namespace,
+            param_rewrites=param_substitutions,
+            convert_types=True),
+        allow_substs=True)
+
+    whi_route_server_params_file = PathJoinSubstitution([
+        get_package_share_directory('whi_nav2_bringup'),
+        'config',
+        'route_server_params.yaml'
+    ])
+
+    whi_configured_route_server_params = ParameterFile(
+        RewrittenYaml(
+            source_file=whi_route_server_params_file,
             root_key=namespace,
             param_rewrites=param_substitutions,
             convert_types=True),
@@ -240,16 +255,31 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings,
             ),
+            # Node(
+            #     package='nav2_route',
+            #     executable='route_server',
+            #     name='route_server',
+            #     namespace=namespace,
+            #     output='screen',
+            #     respawn=use_respawn,
+            #     respawn_delay=2.0,
+            #     parameters=[
+            #         configured_route_server_params,
+            #         {'graph_filepath': graph_file}
+            #     ],
+            #     arguments=['--ros-args', '--log-level', log_level],
+            #     remappings=remappings
+            # ), # nav2 default
             Node(
-                package='nav2_route',
-                executable='route_server',
-                name='route_server',
+                package='whi_nav2_route',
+                executable='whi_route_server',
+                name='whi_route_server',
                 namespace=namespace,
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 parameters=[
-                    configured_route_server_params,
+                    whi_configured_route_server_params,
                     {'graph_filepath': graph_file}
                 ],
                 arguments=['--ros-args', '--log-level', log_level],

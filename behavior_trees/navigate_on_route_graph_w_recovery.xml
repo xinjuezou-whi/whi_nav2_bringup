@@ -19,10 +19,10 @@
         <Wait wait_duration="0.5"/>
 
         <!-- Step 2: Compute the first segment path once -->
-        <!-- <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
+        <!-- <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/> --> <!-- nav2 default -->
+        <ComputeRouteWhi goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
         <GetPoseFromPath path="{route_path}" index="0" pose="{route_start_pose}"/>
-        <ComputePathToPose goal="{route_start_pose}" path="{path_spin}" planner_id="GridBased"/> -->
-        <ComputePathToPose goal="{goal}" path="{path_spin}" planner_id="GridBased"/>
+        <ComputePathToPose goal="{route_start_pose}" path="{path_spin}" planner_id="GridBased"/>
 
         <!-- Step 3: Align with that path (atomic with RecoveryNode) -->
         <RecoveryNode number_of_retries="1" name="SpinAlign">
@@ -66,7 +66,8 @@
 
                 <Sequence name="ComputeAndSmoothRoute">
                   <!-- Compute the route -->
-                  <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
+                  <!-- <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/> --> <!-- nav2 default -->
+                  <ComputeRouteWhi goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
 
                   <!-- Find if the route start node is far from the robot's current pose; if so, connect them for 'first mile'. -->
                   <ReactiveSequence>

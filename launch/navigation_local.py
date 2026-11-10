@@ -101,6 +101,8 @@ def launch_setup(context, *args, **kwargs):
         nav2_params_file_name = f"nav2_params_rpp_{vehicle}.yaml"
     elif local_planner.lower() in ("vp", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_vp_{vehicle}.yaml"
+    elif local_planner.lower() in ("graceful", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_graceful_{vehicle}.yaml"
     else:
         nav2_params_file_name = f"nav2_params_dwb"
 
@@ -229,6 +231,28 @@ def launch_setup(context, *args, **kwargs):
         condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
     )
 
+    # RealSense Camera Inclusion
+    realsense_launch_file = PathJoinSubstitution([
+        FindPackageShare('realsense2_camera'),
+        'launch',
+        'rs_launch.py'
+    ])
+    
+    start_realsense_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(realsense_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+            'depth_module.profile': '640x480x30',
+            'enable_sync': 'true',
+            'global_time_enabled': 'true',
+            'filters': 'decimation,spatial,temporal',
+            'decimation_filter.enable': 'true',
+            'spatial_filter.enable': 'true',
+            'align_depth.enable': 'true',
+            'temporal_filter.enable': 'true'
+        }.items(),
+    )
+
     # range sensors
     range_sensor_params_file=os.path.join(get_package_share_directory('whi_range_sensors'),
         'config', 'config.yaml')
@@ -338,6 +362,7 @@ def launch_setup(context, *args, **kwargs):
         # start_rslidar_cmd,
         start_livox_cmd,
         start_range_sensors_cmd,
+        # start_realsense_cmd,
         start_fast_lio_cmd,
         delay_localization,
         delay_nav2_facilities,
