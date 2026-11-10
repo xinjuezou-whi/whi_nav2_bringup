@@ -136,16 +136,16 @@ def launch_setup(context, *args, **kwargs):
         ]
     else:
         remappings_rtabmap = [
-            # ('scan_cloud', 'rslidar_points'),
-            ('scan_cloud', 'livox/lidar'),
+            ('scan_cloud', 'rslidar_points'),
+            # ('scan_cloud', 'livox/lidar'),
             # ('imu', 'imu_data'),
         ]
 
     if icp_odom.lower() in ("true", "1"): # in case it is a string
         remappings_rtabmap.extend([
             ('odom', 'icp_odom'),
-            # ('imu', 'imu_data'),
-            ('imu', 'livox/imu'),
+            ('imu', 'imu_data'),
+            # ('imu', 'livox/imu'),
         ])
         # parameters['RGBD/NeighborLinkRefining'] = 'false'
     elif fast_lio_odom.lower() in ("true", "1"): # in case it is a string

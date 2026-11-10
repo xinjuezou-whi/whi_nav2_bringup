@@ -26,3 +26,4 @@ route_server:
       plugin: "nav2_route::DistanceScorer"
     CostmapScorer:
       plugin: "nav2_route::CostmapScorer"
+      max_cost: 254.5

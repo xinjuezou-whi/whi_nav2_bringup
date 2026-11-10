@@ -20,7 +20,8 @@
         <Wait wait_duration="0.5"/>
 
         <!-- Step 2: Compute the first segment path once -->
-        <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
+        <!-- <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/> --> <!-- nav2 default -->
+        <ComputeRouteWhi goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
         <GetPoseFromPath path="{route_path}" index="0" pose="{route_start_pose}"/>
         <ComputePathToPose goal="{route_start_pose}" path="{path_spin}" planner_id="GridBased"/>
 
@@ -49,7 +50,7 @@
                   <IsPathValid path="{path}"/> <!-- Base it on the complete connected 'path', not simply the 'route_path' -->
                 </ReactiveSequence>
 
-				<!-- wait for x seconds firstly if the obstacle is on path -->
+                <!-- wait for x seconds firstly if the obstacle is on path -->
                 <ReactiveSequence>
                   <Inverter>
                     <GlobalUpdatedGoal/>
@@ -60,7 +61,8 @@
 
                 <Sequence name="ComputeAndSmoothRoute">
                   <!-- Compute the route -->
-                  <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
+                  <!-- <ComputeRoute goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/> --> <!-- nav2 default -->
+                  <ComputeRouteWhi goal="{goal}" path="{route_path}" route="{route}" use_poses="true"/>
 
                   <!-- Find if the route start node is far from the robot's current pose; if so, connect them for 'first mile'. -->
                   <ReactiveSequence>

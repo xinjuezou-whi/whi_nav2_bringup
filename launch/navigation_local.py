@@ -18,7 +18,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.descriptions import ParameterFile
@@ -98,6 +98,10 @@ def launch_setup(context, *args, **kwargs):
         nav2_params_file_name = f"nav2_params_mppi_{vehicle}.yaml"
     elif local_planner.lower() in ("rpp", "1"): # in case it is a string
         nav2_params_file_name = f"nav2_params_rpp_{vehicle}.yaml"
+    elif local_planner.lower() in ("vp", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_vp_{vehicle}.yaml"
+    elif local_planner.lower() in ("graceful", "1"): # in case it is a string
+        nav2_params_file_name = f"nav2_params_graceful_{vehicle}.yaml"
     else:
         nav2_params_file_name = f"nav2_params_dwb"
 
@@ -184,7 +188,7 @@ def launch_setup(context, *args, **kwargs):
     else:
         enable_odom = "true"
         enable_odom_tf = "true"
-        use_ekf_out = "use_ekf"
+        use_ekf_out = use_ekf
 
     start_whi_motion_hw_if_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(whi_motion_hw_if_launch_file),
@@ -224,6 +228,37 @@ def launch_setup(context, *args, **kwargs):
             'rviz': 'false',
         }.items(),
         condition=UnlessCondition(LaunchConfiguration("use_sim_time")),
+    )
+
+    # RealSense Camera Inclusion
+    realsense_launch_file = PathJoinSubstitution([
+        FindPackageShare('realsense2_camera'),
+        'launch',
+        'rs_launch.py'
+    ])
+    
+    start_realsense_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(realsense_launch_file),
+        launch_arguments={
+            'namespace': namespace,
+            'depth_module.profile': '640x480x30',
+            'enable_sync': 'true',
+            'global_time_enabled': 'true',
+            'filters': 'decimation,spatial,temporal',
+            'decimation_filter.enable': 'true',
+            'spatial_filter.enable': 'true',
+            'align_depth.enable': 'true',
+            'temporal_filter.enable': 'true'
+        }.items(),
+    )
+
+    # Obstacle Detector Inclusion
+    start_obstacle_detector_cmd = Node(
+        package='whi_nav2_bringup',
+        executable='obstacle_detector.py',
+        name='obstacle_detector',
+        namespace=namespace,
+        output='screen'
     )
 
     # range sensors
@@ -316,10 +351,12 @@ def launch_setup(context, *args, **kwargs):
     launch_nodes = [
         start_whi_motion_hw_if_cmd,
         start_lakibeam1_cmd,
-        # start_rslidar_cmd,
-        start_livox_cmd,
+        start_rslidar_cmd,
+        # start_livox_cmd,
         start_range_sensors_cmd,
-        start_fast_lio_cmd,
+        start_realsense_cmd,                  # Added here
+        start_obstacle_detector_cmd,
+        # start_fast_lio_cmd,
         start_localization_cmd,
         start_nav2_facilities_cmd,
         start_rviz_cmd
@@ -339,7 +376,7 @@ def generate_launch_description():
             description='Whether to use composed bringup'),
         DeclareLaunchArgument('use_respawn', default_value='True',
             description='Whether to respawn if a node crashes. Applied when composition is disabled'),
-        DeclareLaunchArgument('use_stamped_vel', default_value='True', # False for foxy, humble
+        DeclareLaunchArgument('use_stamped_vel', default_value='False', # False for foxy, humble
             description='Use stamped twist'),
         DeclareLaunchArgument("vehicle", default_value="L1",
             description="the mobile robot series"),
