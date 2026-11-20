@@ -28,10 +28,7 @@
 
         <!-- Step 3: Align with that path (atomic with RecoveryNode) -->
         <RecoveryNode number_of_retries="1" name="SpinAlign">
-          <Sequence name="Spin_to_path">
-            <SpinToPath path="{path}" lookahead_distance="0.3"/>
-            <!-- <Wait wait_duration="0.2"/> -->
-          </Sequence>
+          <SpinToPath path="{path}" lookahead_distance="0.3"/>
           <Sequence name="RecoverySpinAlign">
             <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
             <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
@@ -90,7 +87,7 @@
         <Sequence name="ClearingActions">
           <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
           <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
-          <!-- <Wait wait_duration="1.0"/> -->
+          <!-- <Wait wait_duration="0.5"/> -->
           <BackUp backup_dist="0.1" backup_speed="0.05"/>
         </Sequence>
       </ReactiveFallback>
