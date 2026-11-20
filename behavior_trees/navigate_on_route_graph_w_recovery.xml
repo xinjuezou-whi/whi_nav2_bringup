@@ -38,15 +38,18 @@
 
         <PipelineSequence name="NavigateWithReplanning">
           <RecoveryNode number_of_retries="1" name="ComputeRoute">
-            <RateController hz="0.1" name="ComputeRouteRateController">
+            <RateController hz="0.2" name="ComputeRouteRateController">
               <Fallback>
                 <!-- Compute a new route if a new goal is found or the path is no longer valid -->
                 <ReactiveSequence>
                   <Inverter>
+                    <PathExpiringTimer seconds="10" path="{path}"/>
+                  </Inverter>
+                  <Inverter>
                     <!-- <GlobalUpdatedGoal/> --> <!-- check the global goal -->
                     <GoalUpdated/> <!-- check the goal since previous tick. to avoid recomputing the path, since the goal and its path are computed at the beginning -->
                   </Inverter>
-                  <IsPathValid path="{path}"/>
+                  <IsPathValid path="{path}"/> <!-- under humble, could be commented out since it is very sensitive -->
                 </ReactiveSequence>
 
                 <Sequence name="ComputeAndSmoothRoute">
@@ -87,7 +90,7 @@
         <Sequence name="ClearingActions">
           <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
           <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
-          <!-- <Wait wait_duration="0.5"/> -->
+          <Wait wait_duration="0.5"/>
           <BackUp backup_dist="0.1" backup_speed="0.05"/>
         </Sequence>
       </ReactiveFallback>
